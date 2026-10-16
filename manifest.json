@@ -1,0 +1,37 @@
+{
+  "id": "/gp-annual-action-plan",
+  "name": "GP Annual Action Plan – Chhattisgarh",
+  "short_name": "GP Plan",
+  "description": "Field survey app to capture Gram Panchayat annual action plans (English / हिंदी). Works offline.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FBF7F2",
+  "theme_color": "#6E2A1D",
+  "lang": "en",
+  "categories": [
+    "productivity",
+    "business"
+  ],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

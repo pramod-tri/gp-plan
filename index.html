@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GP Annual Action Plan — Chhattisgarh</title>
+<meta name="description" content="Capture and track Gram Panchayat annual action plans — activities, budgets, labor-material costing and Excel database.">
+<meta name="theme-color" content="#6E2A1D">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GP Plan">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="fonts/fonts.css">
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="vendor/chart.umd.js"></script>
+<style>
+:root{
+  --maroon:#6E2A1D;
+  --maroon-dark:#54200F;
+  --maroon-tint:#F4E6DF;
+  --orange:#E8792E;
+  --orange-dark:#C96520;
+  --orange-tint:#FCEADA;
+  --ink:#241C18;
+  --stone:#6E645C;
+  --stone-light:#A79C92;
+  --paper:#FFFFFF;
+  --sand:#FBF7F2;
+  --line:#E8DED2;
+  --good:#3A7D4F;
+  --good-tint:#E7F2EA;
+  --bad:#B4382A;
+  --bad-tint:#FBEAE7;
+  --warn:#B8791E;
+  --warn-tint:#FBF0DD;
+  --radius-hex-size:52px;
+  --shadow-soft:0 1px 2px rgba(36,28,24,0.06);
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:var(--sand);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  font-size:15px;
+  line-height:1.5;
+}
+h1,h2,h3,.brand-word{font-family:'Poppins',system-ui,sans-serif;}
+button{font-family:inherit;}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;}
+
+a{color:var(--maroon);}
+
+/* ---------- Layout shell ---------- */
+#app-shell{max-width:1180px;margin:0 auto;padding:0 16px 96px;}
+@media(min-width:1024px){#app-shell{padding:0 32px 84px;}}
+
+header.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 0;border-bottom:3px solid var(--orange);
+  gap:12px;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-mark{
+  width:38px;height:38px;background:var(--maroon);
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:700;font-size:14px;flex:0 0 auto;
+}
+.brand-text{line-height:1.15;}
+.brand-text .l1{font-weight:700;color:var(--maroon);font-size:17px;}
+.brand-text .l2{font-size:11.5px;color:var(--stone);}
+
+nav.tabs{display:flex;gap:4px;flex-wrap:wrap;}
+nav.tabs button{
+  border:none;background:transparent;padding:9px 14px;
+  font-size:13.5px;font-weight:600;color:var(--stone);
+  border-radius:6px;cursor:pointer;transition:background .15s,color .15s;
+}
+nav.tabs button:hover{background:var(--maroon-tint);color:var(--maroon-dark);}
+nav.tabs button.active{background:var(--maroon);color:#fff;}
+nav.tabs button:focus-visible{outline:2px solid var(--orange);outline-offset:2px;}
+
+.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.lang-toggle{display:flex;border:1.5px solid var(--maroon);border-radius:20px;overflow:hidden;flex:0 0 auto;}
+.lang-toggle button{
+  border:none;background:transparent;color:var(--maroon);padding:6px 14px;
+  font-size:12.5px;font-weight:700;cursor:pointer;
+}
+.lang-toggle button.active{background:var(--maroon);color:#fff;}
+.lang-toggle button:focus-visible{outline:2px solid var(--orange);outline-offset:2px;}
+
+.view{display:none;padding-top:22px;}
+.view.active{display:block;}
+
+/* ---------- Section panel (ledger style, no card shadows) ---------- */
+.panel{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-left:4px solid var(--maroon);
+  border-radius:4px;
+  padding:18px 20px;
+  margin-bottom:18px;
+}
+.panel.disabled{opacity:.5;pointer-events:none;filter:grayscale(35%);}
+.panel-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.step-badge{
+  width:30px;height:30px;flex:0 0 auto;
+  background:var(--maroon);color:#fff;font-weight:700;font-size:14px;
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  display:flex;align-items:center;justify-content:center;
+}
+.panel-head h2{margin:0;font-size:16.5px;color:var(--ink);font-weight:600;}
+.panel-head .sub{margin:1px 0 0;font-size:12.5px;color:var(--stone);}
+
+label{display:block;font-size:12.5px;font-weight:600;color:var(--stone);margin-bottom:5px;}
+select,input[type=text],input[type=number],input[type=search]{
+  width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:5px;
+  background:var(--paper);font-size:14.5px;color:var(--ink);
+}
+select:focus,input:focus{outline:2px solid var(--orange);outline-offset:1px;border-color:var(--orange);}
+.field-row{display:grid;gap:12px;grid-template-columns:1fr;}
+@media(min-width:720px){.field-row.cols-3{grid-template-columns:1fr 1fr 1fr;}
+  .field-row.cols-2{grid-template-columns:1fr 1fr;}}
+
+.hint{font-size:12px;color:var(--stone-light);margin-top:4px;}
+.gp-meta{margin-top:10px;font-size:13px;color:var(--stone);}
+.gp-meta b{color:var(--ink);}
+
+/* ---------- Buttons (hexagon signature shape) ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  border:none;cursor:pointer;font-weight:600;font-size:13.5px;
+  padding:11px 26px;transition:transform .12s,background .15s;
+  clip-path:polygon(6% 0%,94% 0%,100% 50%,94% 100%,6% 100%,0% 50%);
+}
+.btn:active{transform:scale(.97);}
+.btn:focus-visible{outline:2px solid var(--ink);outline-offset:3px;}
+.btn-primary{background:var(--maroon);color:#fff;}
+.btn-primary:hover{background:var(--maroon-dark);}
+.btn-accent{background:var(--orange);color:#fff;}
+.btn-accent:hover{background:var(--orange-dark);}
+.btn-ghost{background:transparent;color:var(--maroon);border:1.5px solid var(--maroon);clip-path:none;border-radius:5px;padding:9px 18px;}
+.btn-ghost:hover{background:var(--maroon-tint);}
+.btn-sm{padding:6px 16px;font-size:12.5px;}
+.btn[disabled]{background:var(--stone-light);color:#fff;cursor:not-allowed;}
+.btn-danger-ghost{background:transparent;color:var(--bad);border:1.5px solid var(--bad);clip-path:none;border-radius:5px;padding:8px 16px;font-size:12.5px;}
+
+/* ---------- Activity picker table ---------- */
+.picker-controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.picker-controls>*{flex:1 1 160px;}
+.section-checks{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.sc-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.sc-group-title{font-size:12px;font-weight:700;color:var(--maroon-dark);min-width:78px;}
+.sc-item{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid var(--line);
+  border-radius:20px;font-size:12.5px;cursor:pointer;background:var(--paper);transition:background .15s,border-color .15s;
+  user-select:none;
+}
+.sc-item input{margin:0;accent-color:var(--maroon);width:15px;height:15px;cursor:pointer;}
+.sc-item.checked{background:var(--orange-tint);border-color:var(--orange);font-weight:700;color:var(--maroon-dark);}
+.act-check{width:17px;height:17px;accent-color:var(--maroon);cursor:pointer;}
+table.activity-table{width:100%;border-collapse:collapse;font-size:13px;}
+table.activity-table th{
+  text-align:left;font-size:11.5px;color:var(--stone);font-weight:600;
+  padding:7px 8px;border-bottom:2px solid var(--line);white-space:nowrap;
+}
+table.activity-table td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle;}
+table.activity-table tr.has-qty{background:var(--orange-tint);}
+.wa-name{font-weight:600;color:var(--ink);}
+.wa-desc{font-size:11.5px;color:var(--stone-light);display:block;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.qty-input{width:64px;padding:6px;text-align:right;}
+.right{text-align:right;}
+.table-scroll{max-height:420px;overflow-y:auto;overflow-x:auto;border:1px solid var(--line);border-radius:4px;}
+@media(max-width:719px){table.activity-table{min-width:560px;} .wa-desc{max-width:160px;}}
+.table-scroll table.activity-table th{position:sticky;top:0;background:var(--paper);z-index:1;}
+.section-total-row td{background:var(--maroon-tint);font-weight:700;}
+
+/* ---------- Selected activities list ---------- */
+.selected-group{margin-bottom:10px;}
+.selected-group h4{margin:0 0 6px;font-size:13px;color:var(--maroon-dark);font-weight:700;}
+.selected-line{
+  display:flex;align-items:center;gap:10px;padding:7px 0;
+  border-bottom:1px solid var(--line);font-size:13px;
+}
+.selected-line .name{flex:1;min-width:0;}
+.selected-line .name .wa{font-weight:600;}
+.selected-line .name .meta{font-size:11.5px;color:var(--stone-light);}
+.selected-line input.qty-input{width:56px;}
+.selected-line .cost{width:90px;text-align:right;font-weight:600;}
+.remove-x{background:none;border:none;color:var(--bad);cursor:pointer;font-size:16px;line-height:1;padding:4px;}
+.empty-note{color:var(--stone-light);font-size:13px;padding:10px 0;}
+
+/* ---------- Summary bar ---------- */
+#summary-bar{
+  position:fixed;left:0;right:0;bottom:0;background:var(--ink);color:#fff;
+  padding:10px 16px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;
+  z-index:50;box-shadow:0 -2px 10px rgba(0,0,0,.15);font-size:12.5px;
+}
+#summary-bar .metric{display:flex;flex-direction:column;gap:1px;}
+#summary-bar .metric .val{font-weight:700;font-size:15px;}
+#summary-bar .metric .lbl{color:#cfc4bb;font-size:10.5px;}
+#summary-bar .spacer{flex:1;}
+#summary-bar .actions{display:flex;gap:8px;}
+.status-pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.status-ok{background:var(--good);color:#fff;}
+.status-bad{background:var(--bad);color:#fff;}
+.status-warn{background:var(--warn);color:#fff;}
+@media(max-width:719px){#summary-bar{flex-direction:column;align-items:stretch;gap:8px;}
+  #summary-bar .row1{display:flex;justify-content:space-between;}
+  #summary-bar .actions{justify-content:stretch;}
+  #summary-bar .actions .btn{flex:1;}
+}
+
+/* ---------- Validation / toast ---------- */
+.msg-list{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;}
+.msg-list li{padding:8px 10px;border-radius:4px;font-size:12.5px;}
+.msg-err{background:var(--bad-tint);color:var(--bad);border-left:3px solid var(--bad);}
+.msg-warn{background:var(--warn-tint);color:var(--warn);border-left:3px solid var(--warn);}
+.msg-ok{background:var(--good-tint);color:var(--good);border-left:3px solid var(--good);}
+
+#toast{
+  position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
+  background:var(--ink);color:#fff;padding:11px 20px;border-radius:6px;
+  font-size:13px;z-index:100;opacity:0;pointer-events:none;transition:opacity .25s,bottom .25s;
+  max-width:90vw;text-align:center;
+}
+#toast.show{opacity:1;bottom:112px;}
+#toast.err{background:var(--bad);}
+#toast.ok{background:var(--good);}
+
+/* ---------- Ratio gauge ---------- */
+.gauge-wrap{margin-top:10px;}
+.gauge-track{position:relative;height:14px;background:var(--good-tint);border-radius:7px;overflow:visible;}
+.gauge-fill{position:absolute;left:0;top:0;bottom:0;background:var(--maroon);border-radius:7px 0 0 7px;transition:width .2s,background .2s;}
+.gauge-cap-zone{position:absolute;top:0;bottom:0;right:0;background:var(--bad-tint);border-radius:0 7px 7px 0;}
+.gauge-target{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);}
+.gauge-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--stone);margin-top:4px;}
+
+/* ---------- Prominent budget status banner ---------- */
+.budget-banner{
+  border-radius:6px;padding:16px 18px;margin-bottom:16px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  transition:background .2s;
+}
+.budget-banner.st-good{background:var(--good);color:#fff;}
+.budget-banner.st-warn{background:var(--warn);color:#fff;}
+.budget-banner.st-bad{background:var(--bad);color:#fff;}
+.budget-banner.st-neutral{background:var(--line);color:var(--stone);}
+.budget-banner .bb-pct{font-size:30px;font-weight:700;line-height:1;}
+.budget-banner .bb-label{font-size:11.5px;opacity:.9;margin-top:2px;}
+.budget-banner .bb-detail{font-size:13px;font-weight:600;text-align:right;}
+.budget-banner .bb-detail div{margin:1px 0;}
+
+/* ---------- Suggestions panel ---------- */
+.suggest-empty{font-size:12.5px;color:var(--stone-light);padding:6px 0;}
+.suggest-list{display:flex;flex-direction:column;gap:8px;}
+.suggest-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:var(--sand);border:1px solid var(--line);border-left:3px solid var(--orange);border-radius:5px;
+}
+.suggest-item .si-name{flex:1;min-width:0;}
+.suggest-item .si-name .wa{font-weight:600;font-size:13px;}
+.suggest-item .si-name .meta{font-size:11px;color:var(--stone-light);}
+.suggest-item .si-qty{font-size:12.5px;font-weight:700;color:var(--maroon-dark);white-space:nowrap;}
+.suggest-item .si-cost{font-size:12.5px;font-weight:600;white-space:nowrap;}
+
+/* ---------- KPI cards (dashboard) ---------- */
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;}
+@media(min-width:720px){.kpi-grid{grid-template-columns:repeat(4,1fr);}}
+.kpi{background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--orange);border-radius:4px;padding:14px 14px;}
+.kpi .kv{font-size:22px;font-weight:700;color:var(--maroon-dark);}
+.kpi .kl{font-size:11.5px;color:var(--stone);margin-top:2px;}
+
+.chart-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:18px;}
+@media(min-width:900px){.chart-grid{grid-template-columns:1fr 1fr;}}
+.chart-box{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:14px;}
+.chart-box h3{margin:0 0 10px;font-size:13.5px;color:var(--ink);font-weight:600;}
+.chart-box canvas{max-height:260px;}
+
+.filters-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:end;}
+.filters-bar .f{min-width:160px;flex:1;}
+
+table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+table.data-table th{
+  text-align:left;padding:8px;background:var(--maroon);color:#fff;font-size:11.5px;
+  cursor:pointer;white-space:nowrap;position:sticky;top:0;
+}
+table.data-table td{padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap;}
+table.data-table tr:nth-child(even){background:var(--sand);}
+.dt-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:4px;max-height:480px;overflow-y:auto;}
+
+.empty-state{
+  text-align:center;padding:48px 20px;color:var(--stone);
+}
+.empty-state .mark{
+  width:56px;height:56px;margin:0 auto 14px;background:var(--orange-tint);
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  display:flex;align-items:center;justify-content:center;color:var(--orange-dark);font-size:22px;font-weight:700;
+}
+.empty-state p{margin:4px 0;font-size:13.5px;}
+
+.db-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+.db-actions .count{font-size:12.5px;color:var(--stone);margin-left:auto;}
+
+footer.app-footer{text-align:center;padding:24px 0 8px;font-size:11.5px;color:var(--stone-light);}
+
+.badge-status{padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;}
+.badge-submitted{background:var(--good-tint);color:var(--good);}
+.badge-draft{background:var(--warn-tint);color:var(--warn);}
+
+.rework-banner{background:var(--orange-tint);border-left:3px solid var(--orange);padding:10px 12px;border-radius:4px;font-size:13px;margin-bottom:14px;}
+
+</style>
+</head>
+<body>
+<div id="app-shell">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">GP</div>
+      <div class="brand-text">
+        <div class="l1" data-i18n="appTitle">GP Annual Action Plan</div>
+        <div class="l2"><span data-i18n="appSubtitle">Chhattisgarh · Field Survey App · FY</span> <span id="fy-label"></span></div>
+      </div>
+    </div>
+    <div class="header-right">
+      <nav class="tabs">
+        <button data-view="entry" class="active" data-i18n="tabEntry">Plan entry</button>
+        <button data-view="dashboard" data-i18n="tabDashboard">Dashboard</button>
+        <button data-view="database" data-i18n="tabDatabase">Database</button>
+      </nav>
+      <button class="btn btn-accent btn-sm" id="btn-install" style="display:none;" data-i18n="btnInstall">Install app</button>
+      <div class="lang-toggle">
+        <button data-lang="en" class="active">English</button>
+        <button data-lang="hi">हिंदी</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ ENTRY VIEW ============ -->
+  <main class="view active" id="view-entry">
+
+    <div class="panel" id="panel-gp">
+      <div class="panel-head">
+        <div class="step-badge">1</div>
+        <div><h2 data-i18n="step1Title">Select the Gram Panchayat</h2><p class="sub" data-i18n="step1Sub">Choose the GP this plan is for, under the district and block it belongs to.</p></div>
+      </div>
+      <div class="field-row cols-3">
+        <div><label for="sel-district" data-i18n="lblDistrict">District</label><select id="sel-district"></select></div>
+        <div><label for="sel-block" data-i18n="lblBlock">Block</label><select id="sel-block" disabled></select></div>
+        <div><label for="sel-gp" data-i18n="lblGP">Gram Panchayat</label><select id="sel-gp" disabled></select></div>
+      </div>
+      <div class="gp-meta" id="gp-meta"></div>
+      <p class="hint" id="lang-note" style="display:none;"></p>
+      <div id="rework-banner" class="rework-banner" style="display:none;"></div>
+    </div>
+
+    <div class="panel" id="panel-budget">
+      <div class="panel-head">
+        <div class="step-badge">2</div>
+        <div><h2 data-i18n="step2Title">Set the proposed planning budget</h2><p class="sub"><span data-i18n="step2Sub">Total funds proposed for this GP for FY</span> <span id="budget-fy"></span> <span data-i18n="step2SubUnit">(₹ in Lakhs)</span></p></div>
+      </div>
+      <div class="field-row cols-2">
+        <div><label for="inp-budget" data-i18n="lblBudget">Proposed planning budget (₹ Lakhs)</label><input type="number" id="inp-budget" min="0" step="0.01" data-i18n-placeholder="phBudget" placeholder="e.g. 50"></div>
+      </div>
+      <p class="hint" data-i18n="hintBudget">The final plan must use as much of this budget as possible without exceeding it.</p>
+    </div>
+
+    <div class="panel disabled" id="panel-activities">
+      <div class="panel-head">
+        <div class="step-badge">3</div>
+        <div><h2 data-i18n="step3Title">Add planned activities</h2><p class="sub" data-i18n="step3SubCk">Tick any number of sections to open their activities, then tick activities and enter quantities.</p></div>
+      </div>
+      <div class="picker-controls" style="align-items:flex-start;">
+        <div style="flex:2 1 260px;">
+          <label data-i18n="lblSections">Sections (tick any number)</label>
+          <div id="section-checks" class="section-checks"></div>
+        </div>
+        <div style="flex:1 1 200px;"><label for="inp-search" data-i18n="lblSearch">Search activities</label><input type="search" id="inp-search" data-i18n-placeholder="phSearch" placeholder="e.g. well, road, compost…"></div>
+      </div>
+      <div class="table-scroll">
+        <table class="activity-table">
+          <thead><tr>
+            <th style="width:34px;"></th>
+            <th data-i18n="thActivity">Activity</th>
+            <th class="right" data-i18n="thRate">Rate (₹L/unit)</th>
+            <th class="right" data-i18n="thLabor">Labor %</th>
+            <th class="right" data-i18n="thMaterial">Material %</th>
+            <th data-i18n="thQty">Qty planned</th>
+            <th class="right" data-i18n="thCost">Est. cost (₹L)</th>
+          </tr></thead>
+          <tbody id="activity-tbody"></tbody>
+        </table>
+      </div>
+
+      <h3 style="font-size:14px;margin:20px 0 8px;" data-i18n="hSelected">Selected activities</h3>
+      <div id="selected-list"></div>
+
+      <div class="panel" style="background:var(--sand);margin-top:18px;margin-bottom:0;">
+        <div class="panel-head" style="margin-bottom:8px;">
+          <div><h2 style="font-size:14.5px;" data-i18n="hSuggest">Suggestions to use the remaining budget</h2>
+          <p class="sub" data-i18n="subSuggest">Activities and quantities that fit your remaining budget while keeping material cost within the 40% cap.</p></div>
+        </div>
+        <div id="suggest-box"></div>
+      </div>
+    </div>
+
+    <div class="panel disabled" id="panel-review">
+      <div class="panel-head">
+        <div class="step-badge">4</div>
+        <div><h2 data-i18n="step4Title">Review &amp; submit</h2><p class="sub" data-i18n="step4Sub">Check the totals below, then save a draft or submit the final plan.</p></div>
+      </div>
+
+      <div class="budget-banner st-neutral" id="budget-banner">
+        <div><div class="bb-pct num" id="bb-pct">0%</div><div class="bb-label" data-i18n="bbLabel">Budget utilised</div></div>
+        <div class="bb-detail">
+          <div id="bb-cost">—</div>
+          <div id="bb-remain">—</div>
+        </div>
+      </div>
+
+      <div class="field-row cols-3">
+        <div><label data-i18n="lblRvGP">Gram Panchayat</label><div id="rv-gp" class="num">—</div></div>
+        <div><label data-i18n="lblRvFY">Fiscal year</label><div id="rv-fy" class="num">—</div></div>
+        <div><label data-i18n="lblRvCount">Activities planned</label><div id="rv-count" class="num">0</div></div>
+        <div><label data-i18n="lblRvBudget">Proposed budget</label><div id="rv-budget" class="num">—</div></div>
+        <div><label data-i18n="lblRvCost">Total planned cost</label><div id="rv-cost" class="num">—</div></div>
+        <div><label data-i18n="lblRvUtil">Budget utilisation</label><div id="rv-util" class="num">—</div></div>
+        <div><label data-i18n="lblRvLabor">Labor cost</label><div id="rv-labor" class="num">—</div></div>
+        <div><label data-i18n="lblRvMaterial">Material cost</label><div id="rv-material" class="num">—</div></div>
+      </div>
+      <div class="gauge-wrap">
+        <label data-i18n="lblGauge">Material share of total cost (must not cross the 40% cap)</label>
+        <div class="gauge-track">
+          <div class="gauge-cap-zone" style="width:60%"></div>
+          <div class="gauge-fill" id="gauge-fill" style="width:0%"></div>
+          <div class="gauge-target" style="left:40%"></div>
+        </div>
+        <div class="gauge-labels"><span data-i18n="gaugeL0">0%</span><span data-i18n="gaugeL40">40% cap</span><span data-i18n="gaugeL100">100%</span></div>
+      </div>
+      <ul class="msg-list" id="review-messages"></ul>
+    </div>
+  </main>
+
+  <!-- ============ DASHBOARD VIEW ============ -->
+  <main class="view" id="view-dashboard">
+    <div class="filters-bar">
+      <div class="f"><label data-i18n="lblDistrict">District</label><select id="dash-district"></select></div>
+      <div class="f"><label data-i18n="lblStatus">Status</label>
+        <select id="dash-status">
+          <option value="submitted" selected data-i18n="optSubmittedPlans">Submitted plans</option>
+          <option value="draft" data-i18n="optDraftsOnly">Drafts only</option>
+          <option value="all" data-i18n="optAllPlans">All plans</option>
+        </select>
+      </div>
+    </div>
+    <div id="dash-empty" class="empty-state" style="display:none;">
+      <div class="mark">GP</div>
+      <p><b data-i18n="dashEmptyTitle">No plans yet for this filter.</b></p>
+      <p data-i18n="dashEmptyBody">Submit a plan from the Plan entry tab, or adjust the filters above.</p>
+    </div>
+    <div id="dash-content">
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kv num" id="kpi-gps">0</div><div class="kl" data-i18n="kpiGPs">Gram Panchayats</div></div>
+        <div class="kpi"><div class="kv num" id="kpi-budget">₹0 L</div><div class="kl" data-i18n="kpiBudget">Total proposed budget</div></div>
+        <div class="kpi"><div class="kv num" id="kpi-cost">₹0 L</div><div class="kl" data-i18n="kpiCost">Total planned cost</div></div>
+        <div class="kpi"><div class="kv num" id="kpi-ratio">—</div><div class="kl" data-i18n="kpiRatio">Labor : Material ratio</div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-box"><h3 data-i18n="chartLM">Labor vs. material split</h3><canvas id="chart-lm"></canvas></div>
+        <div class="chart-box"><h3 data-i18n="chartDistrict">Planned cost by district</h3><canvas id="chart-district"></canvas></div>
+      </div>
+      <div class="chart-box" style="margin-bottom:18px;"><h3 data-i18n="chartSection">Planned cost by section (top 10)</h3><canvas id="chart-section"></canvas></div>
+      <div class="chart-box">
+        <h3 data-i18n="chartTable">GP plans</h3>
+        <div class="dt-wrap">
+          <table class="data-table">
+            <thead><tr>
+              <th data-i18n="thGP">GP</th><th data-i18n="thDistrict">District</th><th data-i18n="thBlock">Block</th>
+              <th class="right" data-i18n="thBudgetL">Budget (₹L)</th><th class="right" data-i18n="thCostL">Cost (₹L)</th>
+              <th class="right" data-i18n="thUtil">Utilisation</th><th class="right" data-i18n="thLaborPct">Labor %</th><th data-i18n="thStatus">Status</th>
+            </tr></thead>
+            <tbody id="dash-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ============ DATABASE VIEW ============ -->
+  <main class="view" id="view-database">
+    <div class="panel">
+      <div class="panel-head"><div><h2 data-i18n="dbTitle">Excel database</h2><p class="sub" data-i18n="dbSub">All submitted and draft plans are cached in this browser, and can be exported to or restored from an Excel workbook — the authoritative backend record.</p></div></div>
+      <div class="db-actions">
+        <button class="btn btn-accent btn-sm" id="btn-export-excel" data-i18n="btnExport">Download Excel database</button>
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer;"><span data-i18n="btnImport">Import Excel database</span><input type="file" id="file-import" accept=".xlsx,.xls" style="display:none;"></label>
+        <button class="btn-danger-ghost" id="btn-clear-db" data-i18n="btnClear">Clear local data</button>
+        <span class="count" id="db-count"></span>
+      </div>
+    </div>
+    <div class="panel">
+      <div id="db-empty" class="empty-state" style="display:none;">
+        <div class="mark">GP</div>
+        <p><b data-i18n="dbEmptyTitle">No activity records yet.</b></p>
+        <p data-i18n="dbEmptyBody">Submitted and saved plans will appear here as rows, matching the Excel export.</p>
+      </div>
+      <div id="db-table-wrap" class="dt-wrap" style="display:none;">
+        <table class="data-table">
+          <thead><tr>
+            <th data-i18n="thGP">GP</th><th data-i18n="thDistrict">District</th><th data-i18n="thBlock">Block</th>
+            <th data-i18n="lblCategory">Category</th><th data-i18n="lblSection">Section</th><th data-i18n="thActivity">Activity</th>
+            <th class="right" data-i18n="thQty2">Qty</th><th class="right" data-i18n="thCostL">Cost (₹L)</th><th data-i18n="thStatus">Status</th>
+          </tr></thead>
+          <tbody id="db-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <footer class="app-footer" data-i18n="footerText">GP Annual Action Plan · Data stored locally in this browser and exportable as an Excel workbook · Not affiliated with trif.in</footer>
+</div>
+
+<div id="summary-bar">
+  <div class="row1" style="display:flex;gap:18px;flex-wrap:wrap;">
+    <div class="metric"><div class="val num" id="sum-budget">—</div><div class="lbl" data-i18n="lblBudgetShort">Budget</div></div>
+    <div class="metric"><div class="val num" id="sum-cost">—</div><div class="lbl" data-i18n="lblCostShort">Planned cost</div></div>
+    <div class="metric"><div class="val num" id="sum-remain">—</div><div class="lbl" data-i18n="lblRemainShort">Remaining</div></div>
+    <div class="metric"><div class="val num" id="sum-labor">—</div><div class="lbl" data-i18n="lblLaborShort">Labor</div></div>
+    <div class="metric"><div class="val num" id="sum-material">—</div><div class="lbl" data-i18n="lblMaterialShort">Material</div></div>
+    <div class="metric"><div class="val num" id="sum-ratio">—</div><div class="lbl" data-i18n="lblRatioShort">Labor:Material</div></div>
+    <div class="metric"><span class="status-pill status-warn" id="sum-status" data-i18n="statusInProgress">In progress</span></div>
+  </div>
+  <div class="spacer"></div>
+  <div class="actions">
+    <button class="btn btn-ghost btn-sm" id="btn-new-plan" style="color:#fff;border-color:#fff;" data-i18n="btnNewGP">New GP</button>
+    <button class="btn btn-ghost btn-sm" id="btn-save-draft" style="color:#fff;border-color:#fff;" data-i18n="btnSaveDraft">Save draft</button>
+    <button class="btn btn-accent" id="btn-submit" data-i18n="btnSubmit">Submit final plan</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const ACTIVITIES = JSON.parse("[{\"id\": \"A0001\", \"focusGroup\": \"Community\", \"focusGroupHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f-\u092d\u093e\u0935\u0928\u093e\", \"workType\": \"Construction\", \"workTypeHi\": \"\u0938\u093f\u0935\u093f\u0932 \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"activity\": \"Construction of Under Ground Dyke for Community\", \"activityHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f \u0915\u0947 \u0932\u093f\u090f \u0905\u0902\u0921\u0930\u0917\u094d\u0930\u093e\u0909\u0902\u0921 \u0921\u093e\u0907\u0915 \u0915\u093e \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"rate\": 0.896, \"pctLabor\": 64.4, \"pctMaterial\": 35.6}, {\"id\": \"A0002\", \"focusGroup\": \"Individual\", \"focusGroupHi\": \"\u0935\u094d\u092f\u0915\u094d\u0924\u093f\u0917\u0924\", \"workType\": \"Construction\", \"workTypeHi\": \"\u0938\u093f\u0935\u093f\u0932 \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"activity\": \"Construction of Farm Pond for Individual\", \"activityHi\": \"\u0935\u094d\u092f\u0915\u094d\u0924\u093f \u0915\u0947 \u0932\u093f\u090f \u0916\u0947\u0924 \u0924\u093e\u0932\u093e\u092c \u0915\u093e \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"rate\": 4.0, \"pctLabor\": 90.0, \"pctMaterial\": 10.0}, {\"id\": \"A0003\", \"focusGroup\": \"Community\", \"focusGroupHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f-\u092d\u093e\u0935\u0928\u093e\", \"workType\": \"Construction\", \"workTypeHi\": \"\u0938\u093f\u0935\u093f\u0932 \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"activity\": \"Construction of Water Harvesting Pond for Community\", \"activityHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f \u0915\u0947 \u0932\u093f\u090f \u091c\u0932 \u0938\u0902\u091a\u092f\u0928 \u0924\u093e\u0932\u093e\u092c \u0915\u093e \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"rate\": 20.0, \"pctLabor\": 80.0, \"pctMaterial\": 20.0}, {\"id\": \"A0004\", \"focusGroup\": \"Community\", \"focusGroupHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f-\u092d\u093e\u0935\u0928\u093e\", \"workType\": \"Construction\", \"workTypeHi\": \"\u0938\u093f\u0935\u093f\u0932 \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"activity\": \"Development of Waterlogged Land for Community\", \"activityHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f \u0915\u0947 \u0932\u093f\u090f \u091c\u0932\u092d\u0930\u093e\u0935 \u0935\u093e\u0932\u0940 \u092d\u0942\u092e\u093f \u0915\u093e \u0935\u093f\u0915\u093e\u0938\", \"rate\": 0.352, \"pctLabor\": 65.63, \"pctMaterial\": 34.38}, {\"id\": \"A0005\", \"focusGroup\": \"Community\", \"focusGroupHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f-\u092d\u093e\u0935\u0928\u093e\", \"workType\": \"Afforestation\", \"workTypeHi\": \"\u0935\u0928\u0930\u094b\u092a\u0923\", \"activity\": \"Afforestation and Plantation Works Linked with Soil and Moisture Conservation\", \"activityHi\": \"\u092e\u093f\u091f\u094d\u091f\u0940 \u0914\u0930 \u0928\u092e\u0940 \u0938\u0902\u0930\u0915\u094d\u0937\u0923 \u0938\u0947 \u091c\u0941\u0921\u093c\u0947 \u0935\u0928\u0940\u0915\u0930\u0923 \u0914\u0930 \u0935\u0943\u0915\u094d\u0937\u093e\u0930\u094b\u092a\u0923 \u0915\u093e\u0930\u094d\u092f\", \"rate\": 10.16, \"pctLabor\": 66.04, \"pctMaterial\": 33.96}, {\"id\": \"A0006\", \"focusGroup\": \"Community\", \"focusGroupHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f-\u092d\u093e\u0935\u0928\u093e\", \"workType\": \"Construction\", \"workTypeHi\": \"\u0938\u093f\u0935\u093f\u0932 \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"activity\": \"Construction of Culvert for Community \u2013 3.0 m Span\", \"activityHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f \u0915\u0947 \u0932\u093f\u090f \u092a\u0941\u0932\u093f\u092f\u093e \u0915\u093e \u0928\u093f\u0930\u094d\u092e\u093e\u0923 - 3.0 \u092e\u0940\u091f\u0930 \u0915\u0940 \u0905\u0935\u0927\u093f\", \"rate\": 6.78, \"pctLabor\": 25.52, \"pctMaterial\": 74.63}, {\"id\": \"A0007\", \"focusGroup\": \"Community\", \"focusGroupHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f-\u092d\u093e\u0935\u0928\u093e\", \"workType\": \"Construction\", \"workTypeHi\": \"\u0938\u093f\u0935\u093f\u0932 \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"activity\": \"Construction of WBM Road for Community\", \"activityHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f \u0915\u0947 \u0932\u093f\u090f \u0921\u092c\u094d\u0932\u094d\u092f\u0942\u092c\u0940\u090f\u092e \u0938\u0921\u093c\u0915 \u0915\u093e \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"rate\": 37.71, \"pctLabor\": 36.01, \"pctMaterial\": 64.01}, {\"id\": \"A0008\", \"focusGroup\": \"Community\", \"focusGroupHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f-\u092d\u093e\u0935\u0928\u093e\", \"workType\": \"Construction\", \"workTypeHi\": \"\u0938\u093f\u0935\u093f\u0932 \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"activity\": \"Development of Anganwadi Center Building for Community\", \"activityHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f \u0915\u0947 \u0932\u093f\u090f \u0906\u0902\u0917\u0928\u0935\u093e\u0921\u093c\u0940 \u0915\u0947\u0902\u0926\u094d\u0930 \u092d\u0935\u0928 \u0915\u093e \u0935\u093f\u0915\u093e\u0938\", \"rate\": 14.69, \"pctLabor\": 20.76, \"pctMaterial\": 79.24}, {\"id\": \"A0009\", \"focusGroup\": \"Community\", \"focusGroupHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f-\u092d\u093e\u0935\u0928\u093e\", \"workType\": \"Construction\", \"workTypeHi\": \"\u0938\u093f\u0935\u093f\u0932 \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"activity\": \"Construction of Gram Panchayat Building for Community\", \"activityHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f \u0915\u0947 \u0932\u093f\u090f \u0917\u094d\u0930\u093e\u092e \u092a\u0902\u091a\u093e\u092f\u0924 \u092d\u0935\u0928 \u0915\u093e \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"rate\": 19.2, \"pctLabor\": 14.06, \"pctMaterial\": 85.94}, {\"id\": \"A0010\", \"focusGroup\": \"Community\", \"focusGroupHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f-\u092d\u093e\u0935\u0928\u093e\", \"workType\": \"Construction\", \"workTypeHi\": \"\u0938\u093f\u0935\u093f\u0932 \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"activity\": \"Construction of Additional Classroom for Government School for Community\", \"activityHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f \u0915\u0947 \u0932\u093f\u090f \u0938\u0930\u0915\u093e\u0930\u0940 \u0938\u094d\u0915\u0942\u0932 \u0915\u0947 \u0932\u093f\u090f \u0905\u0924\u093f\u0930\u093f\u0915\u094d\u0924 \u0915\u0915\u094d\u0937\u093e \u0915\u093e \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"rate\": 7.09, \"pctLabor\": 19.46, \"pctMaterial\": 80.54}, {\"id\": \"A0011\", \"focusGroup\": \"Community\", \"focusGroupHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f-\u092d\u093e\u0935\u0928\u093e\", \"workType\": \"Construction\", \"workTypeHi\": \"\u0938\u093f\u0935\u093f\u0932 \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"activity\": \"Construction of Toilet for Government School for Community\", \"activityHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f \u0915\u0947 \u0932\u093f\u090f \u0938\u0930\u0915\u093e\u0930\u0940 \u0938\u094d\u0915\u0942\u0932 \u0915\u0947 \u0932\u093f\u090f \u0936\u094c\u091a\u093e\u0932\u092f \u0915\u093e \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"rate\": 5.0, \"pctLabor\": 29.8, \"pctMaterial\": 70.2}, {\"id\": \"A0012\", \"focusGroup\": \"Community\", \"focusGroupHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f-\u092d\u093e\u0935\u0928\u093e\", \"workType\": \"Construction\", \"workTypeHi\": \"\u0938\u093f\u0935\u093f\u0932 \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"activity\": \"Construction of Crematorium for Community\", \"activityHi\": \"\u0936\u094d\u092e\u0936\u093e\u0928 \u0915\u093e \u0928\u093f\u0930\u094d\u092e\u093e\u0923 \u0938\u092e\u0941\u0926\u093e\u092f-\u092d\u093e\u0935\u0928\u093e\", \"rate\": 6.0, \"pctLabor\": 28.33, \"pctMaterial\": 71.67}, {\"id\": \"A0013\", \"focusGroup\": \"Community\", \"focusGroupHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f-\u092d\u093e\u0935\u0928\u093e\", \"workType\": \"Construction\", \"workTypeHi\": \"\u0938\u093f\u0935\u093f\u0932 \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"activity\": \"Construction of Food Grain Storage Building for Community\", \"activityHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f \u0915\u0947 \u0932\u093f\u090f \u0916\u093e\u0926\u094d\u092f\u093e\u0928\u094d\u0928 \u092d\u0902\u0921\u093e\u0930\u0923 \u092d\u0935\u0928 \u0915\u093e \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"rate\": 13.8, \"pctLabor\": 22.61, \"pctMaterial\": 77.39}, {\"id\": \"A0014\", \"focusGroup\": \"Community\", \"focusGroupHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f-\u092d\u093e\u0935\u0928\u093e\", \"workType\": \"Construction\", \"workTypeHi\": \"\u0938\u093f\u0935\u093f\u0932 \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"activity\": \"Construction of Aquaculture Structure for Fish Farming for Community\", \"activityHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f \u0915\u0947 \u0932\u093f\u090f \u092e\u091b\u0932\u0940 \u092a\u093e\u0932\u0928 \u0915\u0947 \u0932\u093f\u090f \u091c\u0932\u0940\u092f \u0915\u0943\u0937\u093f \u0938\u0902\u0930\u091a\u0928\u093e \u0915\u093e \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"rate\": 4.55, \"pctLabor\": 87.03, \"pctMaterial\": 12.97}, {\"id\": \"A0015\", \"focusGroup\": \"Community\", \"focusGroupHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f-\u092d\u093e\u0935\u0928\u093e\", \"workType\": \"Construction\", \"workTypeHi\": \"\u0938\u093f\u0935\u093f\u0932 \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"activity\": \"Construction of Forest Fireline Control for Community\", \"activityHi\": \"\u0938\u092e\u0941\u0926\u093e\u092f \u0915\u0947 \u0932\u093f\u090f \u0935\u0928 \u092b\u093e\u092f\u0930\u0932\u093e\u0907\u0928 \u0928\u093f\u092f\u0902\u0924\u094d\u0930\u0923 \u0915\u093e \u0928\u093f\u0930\u094d\u092e\u093e\u0923\", \"rate\": 6.47, \"pctLabor\": 72.33, \"pctMaterial\": 27.67}]");
+const GPS = JSON.parse("[{\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121821, \"gpName\": \"Bade Devda\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 265253, \"gpName\": \"Bade Jeerakhal\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121822, \"gpName\": \"Badlawand\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121823, \"gpName\": \"Bajawand\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121824, \"gpName\": \"Bakawand\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121825, \"gpName\": \"Baniyagaon\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121826, \"gpName\": \"Barda\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121827, \"gpName\": \"Bedaumargaon\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121828, \"gpName\": \"Belputi\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 265324, \"gpName\": \"Bheerlinga\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121829, \"gpName\": \"Bhejripadar\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 296006, \"gpName\": \"Bhirenda\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121830, \"gpName\": \"Borigaon\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121831, \"gpName\": \"Borpadar\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 265326, \"gpName\": \"Chapapader Chapapader\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121832, \"gpName\": \"Chargaon\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121833, \"gpName\": \"Chhinari\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121834, \"gpName\": \"Chhindgaon\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 265256, \"gpName\": \"Chhotejirakhal\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 296245, \"gpName\": \"Chindgaon 2\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121835, \"gpName\": \"Chitaloor\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121836, \"gpName\": \"Chiurgoan\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121837, \"gpName\": \"Choknar\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121838, \"gpName\": \"Cholnar\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121839, \"gpName\": \"Chote Dewda\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 296002, \"gpName\": \"Dashapal\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121840, \"gpName\": \"Dhanpur\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121841, \"gpName\": \"Dhobiguda\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121842, \"gpName\": \"Dimrapal\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 265322, \"gpName\": \"Dodrepal\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121843, \"gpName\": \"Garenga\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 296003, \"gpName\": \"Girola\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 296248, \"gpName\": \"Gotiguda Karhabhata\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121844, \"gpName\": \"Gumdel\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121845, \"gpName\": \"Jaibel\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 296247, \"gpName\": \"Jaibel 2\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121846, \"gpName\": \"Jaitgiri\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121847, \"gpName\": \"Jharumargaon\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 296000, \"gpName\": \"Junawani\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121848, \"gpName\": \"Kachnar\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121849, \"gpName\": \"Karitgaon\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121850, \"gpName\": \"Karpawand\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 296246, \"gpName\": \"Khamesari\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 265259, \"gpName\": \"Khotla Pal\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121851, \"gpName\": \"Kinjoli\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121852, \"gpName\": \"Kohkapal\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121853, \"gpName\": \"Kolawal\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121854, \"gpName\": \"Korta\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121855, \"gpName\": \"Kosmi\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121856, \"gpName\": \"Koudawand\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121857, \"gpName\": \"Kumhrawand\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 265320, \"gpName\": \"Lavagaon\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 265257, \"gpName\": \"Mail Beda\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121858, \"gpName\": \"Malgaon\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121859, \"gpName\": \"Mangnar\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121860, \"gpName\": \"Maretha\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 296001, \"gpName\": \"Masagaon\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121861, \"gpName\": \"Matnar\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121862, \"gpName\": \"Mohlai (B.)\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121863, \"gpName\": \"Mohlai Naveen\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 296008, \"gpName\": \"Mokhagaon\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121864, \"gpName\": \"Mongarapal\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121865, \"gpName\": \"Moolee\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121866, \"gpName\": \"Nalpawand\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 296015, \"gpName\": \"Narawand\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121867, \"gpName\": \"Pahurbel\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 295997, \"gpName\": \"Paikapal\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121868, \"gpName\": \"Pandanar\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121869, \"gpName\": \"Pathri\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121870, \"gpName\": \"Pharsara\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121871, \"gpName\": \"Pharsigaon\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 296016, \"gpName\": \"Pithapur\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121872, \"gpName\": \"Potiyawand\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 296249, \"gpName\": \"Raikeradewda\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121873, \"gpName\": \"Rajnagar\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 265258, \"gpName\": \"Saandevda\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121874, \"gpName\": \"Sandh Karmari\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121875, \"gpName\": \"Sanwra\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121876, \"gpName\": \"Sargipal\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121877, \"gpName\": \"Satlawand\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121878, \"gpName\": \"Satosha\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 296244, \"gpName\": \"Satosha 2\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121879, \"gpName\": \"Sonpur\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121880, \"gpName\": \"Soutpur\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121881, \"gpName\": \"Suwa Chond\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121882, \"gpName\": \"Talnar\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121883, \"gpName\": \"Tarapur\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 296013, \"gpName\": \"Tareka\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121884, \"gpName\": \"Tongkongera\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 296010, \"gpName\": \"Tungapal\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121885, \"gpName\": \"Udiyapal\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121886, \"gpName\": \"Ulnar\"}, {\"district\": \"Bastar\", \"block\": \"Bakawand\", \"gpCode\": 121887, \"gpName\": \"Vankomar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123476, \"gpName\": \"Badekameli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123477, \"gpName\": \"Balood\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123478, \"gpName\": \"Balpet\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 302476, \"gpName\": \"Benpal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123479, \"gpName\": \"Bhansi\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123480, \"gpName\": \"Bhogam\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123481, \"gpName\": \"Chandenar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123482, \"gpName\": \"Chitalanka\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 263371, \"gpName\": \"Chitaloor\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 302445, \"gpName\": \"Degalras\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123483, \"gpName\": \"Dhurli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123484, \"gpName\": \"Dugeli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 295744, \"gpName\": \"Dumam\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123485, \"gpName\": \"Gadapal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123486, \"gpName\": \"Gamawada\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123487, \"gpName\": \"Ganjenar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123488, \"gpName\": \"Jaram\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 302464, \"gpName\": \"Jhirka\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123489, \"gpName\": \"Kamaloor\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123490, \"gpName\": \"Kawadgaon\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 263369, \"gpName\": \"Kawalnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123491, \"gpName\": \"Keshapur\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123492, \"gpName\": \"Kumharras\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 302471, \"gpName\": \"Kundeli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 295746, \"gpName\": \"Kuper\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123493, \"gpName\": \"Mangnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123494, \"gpName\": \"Masenar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123495, \"gpName\": \"Matenar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123496, \"gpName\": \"Metapal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 296268, \"gpName\": \"Metapal 02\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123497, \"gpName\": \"Molasnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 295745, \"gpName\": \"Murkee\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 302474, \"gpName\": \"Muskel\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123498, \"gpName\": \"Nerli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123499, \"gpName\": \"Netapur\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123500, \"gpName\": \"Padhapur\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123501, \"gpName\": \"Pandewar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123502, \"gpName\": \"Phulnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123503, \"gpName\": \"Pondum\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 296269, \"gpName\": \"Pondum 2\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123504, \"gpName\": \"Teknar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123505, \"gpName\": \"Toyalanka\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Dantewada\", \"gpCode\": 123506, \"gpName\": \"Tudparas\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123507, \"gpName\": \"Aalnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 301639, \"gpName\": \"Badebacheli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 302463, \"gpName\": \"Badekarka\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 263414, \"gpName\": \"Badekarli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123508, \"gpName\": \"Badepaneda\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 303039, \"gpName\": \"Badepaneda 02\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123509, \"gpName\": \"Badesurokhi\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123510, \"gpName\": \"Badetumnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123511, \"gpName\": \"Bangapal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123512, \"gpName\": \"Bhatpal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123513, \"gpName\": \"Binjam\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 276507, \"gpName\": \"Bodli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 302608, \"gpName\": \"Budpadar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 263403, \"gpName\": \"Cherpal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123515, \"gpName\": \"Chhindnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123516, \"gpName\": \"Chhotetumnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 295747, \"gpName\": \"Fundri\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123517, \"gpName\": \"Ghotpal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 296270, \"gpName\": \"Ghotpal 02\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123518, \"gpName\": \"Gumalnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123519, \"gpName\": \"Gumda\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 263410, \"gpName\": \"Gutoli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123520, \"gpName\": \"Haram\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 303037, \"gpName\": \"Haram 02\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 302469, \"gpName\": \"Harla\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123521, \"gpName\": \"Haurnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123522, \"gpName\": \"Hidpal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123523, \"gpName\": \"Hiranar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 303040, \"gpName\": \"Hiranar 02\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123524, \"gpName\": \"Hitameta\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123525, \"gpName\": \"Javanga\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 263419, \"gpName\": \"Jhodiya Badam\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 263486, \"gpName\": \"Jodatarai\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 276512, \"gpName\": \"Karli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 303058, \"gpName\": \"Karli 02\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123527, \"gpName\": \"Kasoli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 296271, \"gpName\": \"Kasoli 02\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123528, \"gpName\": \"Katulnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123529, \"gpName\": \"Kaurgaon\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 263409, \"gpName\": \"Korkati\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 263406, \"gpName\": \"Korlapal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 295749, \"gpName\": \"Kundenar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 302477, \"gpName\": \"Madpal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123530, \"gpName\": \"Madse\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123531, \"gpName\": \"Mophalnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123532, \"gpName\": \"Muchnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 295748, \"gpName\": \"Munder\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123533, \"gpName\": \"Mustalnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123534, \"gpName\": \"Nagul\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 302591, \"gpName\": \"Nailagoda\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123535, \"gpName\": \"Pahurnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123536, \"gpName\": \"Pharaspal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123537, \"gpName\": \"Ronje\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123538, \"gpName\": \"Samlur\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 302480, \"gpName\": \"Siyanar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123539, \"gpName\": \"Tumrigunda\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Geedam\", \"gpCode\": 123540, \"gpName\": \"Upet\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450207, \"gpName\": \"Adpal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450211, \"gpName\": \"Atepal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 295743, \"gpName\": \"Atepal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450201, \"gpName\": \"Bade Bedma\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123541, \"gpName\": \"Badebedma\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450223, \"gpName\": \"Badegadam\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123542, \"gpName\": \"Badegadam\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450209, \"gpName\": \"Badegudra\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123543, \"gpName\": \"Badegudra\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123544, \"gpName\": \"Badelakhapal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450190, \"gpName\": \"Badelekhapal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450187, \"gpName\": \"Bengloor\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123545, \"gpName\": \"Benglur\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450205, \"gpName\": \"Bhusaras\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123546, \"gpName\": \"Bhusaras\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450193, \"gpName\": \"Burdikarka\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450200, \"gpName\": \"Chhote Bedma\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450227, \"gpName\": \"Chhote Lakhapal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 302482, \"gpName\": \"Chhotebedma\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450210, \"gpName\": \"Chhotegudra\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123547, \"gpName\": \"Chhotegudra\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450198, \"gpName\": \"Chhotehadma Munda\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 302495, \"gpName\": \"Chhotelakhapal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450220, \"gpName\": \"Chikpal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123548, \"gpName\": \"Chikpal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123549, \"gpName\": \"Dhanikarka\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 302487, \"gpName\": \"Dhudhiras\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450206, \"gpName\": \"Dudhiras\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450196, \"gpName\": \"Duwalikarka\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 302478, \"gpName\": \"Duwalikarka\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123550, \"gpName\": \"Edpal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450185, \"gpName\": \"Gatam\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123551, \"gpName\": \"Gatam\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450216, \"gpName\": \"Gudase\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123552, \"gpName\": \"Gudse\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450225, \"gpName\": \"Jangampal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123553, \"gpName\": \"Jangampal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450188, \"gpName\": \"Katekalyan\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123554, \"gpName\": \"Katekalyan\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450191, \"gpName\": \"Kodaripal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450199, \"gpName\": \"Koriras\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123555, \"gpName\": \"Koriras\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123556, \"gpName\": \"Maharakarka\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450221, \"gpName\": \"Marjum\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123557, \"gpName\": \"Marjum\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450186, \"gpName\": \"Mathadi\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 295741, \"gpName\": \"Mathadi\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450203, \"gpName\": \"Mokhpal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123558, \"gpName\": \"Mokhpal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450217, \"gpName\": \"Nadenar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 302490, \"gpName\": \"Nadenar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450192, \"gpName\": \"Nayanar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 302466, \"gpName\": \"Nayanar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 954562, \"gpName\": \"Paknachua\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 296682, \"gpName\": \"Paknachua\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450218, \"gpName\": \"Parcheli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123559, \"gpName\": \"Parcheli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450226, \"gpName\": \"Pratapgiri\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 302493, \"gpName\": \"Pratapgiri\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450197, \"gpName\": \"Surnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123560, \"gpName\": \"Surnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450213, \"gpName\": \"Telam\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123561, \"gpName\": \"Telam\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123562, \"gpName\": \"Tetam\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 450215, \"gpName\": \"Tumakpal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Katekalyan\", \"gpCode\": 123563, \"gpName\": \"Tumakpal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123621, \"gpName\": \"Aranpur\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 450275, \"gpName\": \"Arbe\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 295753, \"gpName\": \"Arbe\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 302486, \"gpName\": \"Bade Hadma Munda\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 450237, \"gpName\": \"Bade Hadmamunda\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 450277, \"gpName\": \"Barrem\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 450274, \"gpName\": \"Burgum\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123622, \"gpName\": \"Burgum\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 296255, \"gpName\": \"Cholnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 450241, \"gpName\": \"Doriras\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 450281, \"gpName\": \"Fulpad\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 450229, \"gpName\": \"Gadhmiri\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123623, \"gpName\": \"Gadhmiri\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 450235, \"gpName\": \"Gongpal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123624, \"gpName\": \"Gongpal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123625, \"gpName\": \"Gumiyapal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 450232, \"gpName\": \"Halbaras\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 295750, \"gpName\": \"Halbaras\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123626, \"gpName\": \"Hiroli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 450233, \"gpName\": \"Hitawar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123627, \"gpName\": \"Hitawar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 450276, \"gpName\": \"Jabeli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123628, \"gpName\": \"Jabeli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 450240, \"gpName\": \"Jimer\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123629, \"gpName\": \"Kadampal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123630, \"gpName\": \"Kalepal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 295751, \"gpName\": \"Khuntepal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 450238, \"gpName\": \"Khutepal\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 263454, \"gpName\": \"Kodenar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 450231, \"gpName\": \"Kuakonda\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123631, \"gpName\": \"Kutrem\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123632, \"gpName\": \"Kuwakonda\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123633, \"gpName\": \"Madadi\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 302465, \"gpName\": \"Madhkamiras\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123634, \"gpName\": \"Maharahaurnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123635, \"gpName\": \"Mailawada\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 302479, \"gpName\": \"Muler\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123636, \"gpName\": \"Nahadi\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123637, \"gpName\": \"Nakulnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123638, \"gpName\": \"Neelavaya\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123639, \"gpName\": \"Palnar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123640, \"gpName\": \"Phulpad\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123641, \"gpName\": \"Potali\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 295752, \"gpName\": \"Reganar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123642, \"gpName\": \"Revali\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123643, \"gpName\": \"Samalwar\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123644, \"gpName\": \"Sameli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123645, \"gpName\": \"Shyamgiri\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 296267, \"gpName\": \"Taneli\"}, {\"district\": \"Dakshin Bastar Dantewada\", \"block\": \"Kuwakonda\", \"gpCode\": 123646, \"gpName\": \"Tikanpal\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122122, \"gpName\": \"Aadnar\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295674, \"gpName\": \"Badaloor\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122125, \"gpName\": \"Bade Banjoda\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122126, \"gpName\": \"Bade Bendari\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122123, \"gpName\": \"Bade Bhirawand\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122124, \"gpName\": \"Bade Kanera\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122127, \"gpName\": \"Bade Kurusnar\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295664, \"gpName\": \"Bade Silati\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122128, \"gpName\": \"Bafana\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122129, \"gpName\": \"Bakhra\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122130, \"gpName\": \"Bamhani\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122131, \"gpName\": \"Baniyagaon\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122132, \"gpName\": \"Banjugani\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122133, \"gpName\": \"Bansgaon\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295663, \"gpName\": \"Bansirasi\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295667, \"gpName\": \"Banusari\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122134, \"gpName\": \"Bayanar\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 265382, \"gpName\": \"Becha\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295673, \"gpName\": \"Betbeda\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122135, \"gpName\": \"Bhagdewa\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122136, \"gpName\": \"Bhiragaon-A\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122137, \"gpName\": \"Bhiragaon-B\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122138, \"gpName\": \"Bhogadi\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122139, \"gpName\": \"Bolbola\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122140, \"gpName\": \"Borgaon\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 265427, \"gpName\": \"Botikanera\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 296198, \"gpName\": \"Budakasa\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122141, \"gpName\": \"Bunagaon\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295661, \"gpName\": \"Chalka\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295670, \"gpName\": \"Chamai\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295675, \"gpName\": \"Changer\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295671, \"gpName\": \"Chema\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295653, \"gpName\": \"Cherang\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295666, \"gpName\": \"Chhote Banjoda\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 265373, \"gpName\": \"Chhote Bhirawand\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122142, \"gpName\": \"Chhoteusari\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122143, \"gpName\": \"Chichdongari\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122144, \"gpName\": \"Chikhalputi\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122145, \"gpName\": \"Chilputi\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122146, \"gpName\": \"Chimdi\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122147, \"gpName\": \"Chipawand\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122148, \"gpName\": \"Choudang\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122149, \"gpName\": \"Dahikonga\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 296200, \"gpName\": \"Dhanpur\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122150, \"gpName\": \"Dongariguda\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122151, \"gpName\": \"Ghodagaon\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122152, \"gpName\": \"Girola\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122153, \"gpName\": \"Golawand\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122154, \"gpName\": \"Hadeli\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122155, \"gpName\": \"Hangwa\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122156, \"gpName\": \"Hasalnar\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 265381, \"gpName\": \"Hathkali\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122157, \"gpName\": \"Isalanar\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 265431, \"gpName\": \"Jhara\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122158, \"gpName\": \"Joba\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 265384, \"gpName\": \"Jodenga\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295660, \"gpName\": \"Jogi Aadwal\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295668, \"gpName\": \"Kaarsing\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295669, \"gpName\": \"Kachora\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122159, \"gpName\": \"Kadenar\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122160, \"gpName\": \"Kamela\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122161, \"gpName\": \"Kanga\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122162, \"gpName\": \"Karanji\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122163, \"gpName\": \"Karanpur\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122164, \"gpName\": \"Kejang\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122165, \"gpName\": \"Khachgaon\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 296202, \"gpName\": \"Khadka\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122166, \"gpName\": \"Khadpadi\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122167, \"gpName\": \"Khandam\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122168, \"gpName\": \"Kibaibalenga\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122169, \"gpName\": \"Kokodi\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122170, \"gpName\": \"Kongera\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295676, \"gpName\": \"Kormel\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122171, \"gpName\": \"Kudhur\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122172, \"gpName\": \"Kukadgarkapal\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295665, \"gpName\": \"Kuljhar\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 296199, \"gpName\": \"Kumhari\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122174, \"gpName\": \"Kusma\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122175, \"gpName\": \"Lakhapuri\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 296201, \"gpName\": \"Lemdi\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 265426, \"gpName\": \"Madagaon\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122176, \"gpName\": \"Madanar\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122177, \"gpName\": \"Makdi\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122178, \"gpName\": \"Malakot\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122179, \"gpName\": \"Malgaon\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122180, \"gpName\": \"Mardapal\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122181, \"gpName\": \"Masora\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122182, \"gpName\": \"Matwal\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295672, \"gpName\": \"Mayurdongar\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122183, \"gpName\": \"Mohlai\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122184, \"gpName\": \"Mulmula\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 265378, \"gpName\": \"Mulnaar\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122185, \"gpName\": \"Mungapadar\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295656, \"gpName\": \"Mungwal\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 265377, \"gpName\": \"Nahkanaar\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122186, \"gpName\": \"Nariha\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122187, \"gpName\": \"Nawagaon\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122188, \"gpName\": \"Nevta\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 265412, \"gpName\": \"Nilji\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295677, \"gpName\": \"Padnaar\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 265365, \"gpName\": \"Pala\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122189, \"gpName\": \"Palari\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122190, \"gpName\": \"Palli\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295654, \"gpName\": \"Permapal\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122191, \"gpName\": \"Phukagirola\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 265386, \"gpName\": \"Polang\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122192, \"gpName\": \"Pusawand\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122193, \"gpName\": \"Puspal\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122194, \"gpName\": \"Rajgaon\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122195, \"gpName\": \"Ranapal\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 265374, \"gpName\": \"Rengagondi\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122196, \"gpName\": \"Sambalpur\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122197, \"gpName\": \"Satgaon\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122198, \"gpName\": \"Singanpur\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 265369, \"gpName\": \"Sitali\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122199, \"gpName\": \"Sonabal\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122200, \"gpName\": \"Sukurpal\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 265387, \"gpName\": \"Tekapal\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122201, \"gpName\": \"Temarugaon\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 295662, \"gpName\": \"Todam\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 265429, \"gpName\": \"Totar\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 265385, \"gpName\": \"Tumadiwal\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122202, \"gpName\": \"Umargaon-A\"}, {\"district\": \"Kondagaon\", \"block\": \"Kondagaon\", \"gpCode\": 122203, \"gpName\": \"Umargaon-B\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1299948, \"gpName\": \"Aargoan\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 129994, \"gpName\": \"Aargoan\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1299958, \"gpName\": \"Aari\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 129995, \"gpName\": \"Aari\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1299968, \"gpName\": \"Aasara\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 129996, \"gpName\": \"Aasara\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 945873, \"gpName\": \"Adam\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441110, \"gpName\": \"Alikhunta\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1299978, \"gpName\": \"Amalidiha\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 129997, \"gpName\": \"Amalidiha\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441149, \"gpName\": \"Amlidih\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441095, \"gpName\": \"Argaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441147, \"gpName\": \"Ari\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1299988, \"gpName\": \"Arjuni\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 129998, \"gpName\": \"Arjuni\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441178, \"gpName\": \"Arjuni\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441132, \"gpName\": \"Arsi Tola\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1299998, \"gpName\": \"Bad Chabhatha\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 129999, \"gpName\": \"Bad Chabhatha\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300008, \"gpName\": \"Badbhoom\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130000, \"gpName\": \"Badbhoom\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441160, \"gpName\": \"Badbhum\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441164, \"gpName\": \"Badgaon Charbhatha\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300018, \"gpName\": \"Bagadai\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130001, \"gpName\": \"Bagadai\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441146, \"gpName\": \"Bagdai\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441155, \"gpName\": \"Baghmar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441134, \"gpName\": \"Bamhani Bhatha\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300028, \"gpName\": \"Bamhanibhatha\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130002, \"gpName\": \"Bamhanibhatha\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 2635838, \"gpName\": \"Banbhedi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 263583, \"gpName\": \"Banbhedi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441101, \"gpName\": \"Banbhedi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300038, \"gpName\": \"Banhardi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130003, \"gpName\": \"Banhardi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441100, \"gpName\": \"Banhardi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300048, \"gpName\": \"Bankal\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130004, \"gpName\": \"Bankal\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441096, \"gpName\": \"Bankal\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300058, \"gpName\": \"Bargaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130005, \"gpName\": \"Bargaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441141, \"gpName\": \"Bargaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441093, \"gpName\": \"Barhapur\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441150, \"gpName\": \"Barsan Tola\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 2635848, \"gpName\": \"Barsantola\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 263584, \"gpName\": \"Barsantola\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441159, \"gpName\": \"Bendarkatta\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441167, \"gpName\": \"Bhakheri\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 2635918, \"gpName\": \"Bhatguna\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 263591, \"gpName\": \"Bhatguna\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441190, \"gpName\": \"Bhothli\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300068, \"gpName\": \"Bijabhatha\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130006, \"gpName\": \"Bijabhatha\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441172, \"gpName\": \"Bije Bhatha\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300078, \"gpName\": \"Bodela\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130007, \"gpName\": \"Bodela\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300088, \"gpName\": \"Buddhubharda\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130008, \"gpName\": \"Buddhubharda\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441098, \"gpName\": \"Buddhubharda\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300098, \"gpName\": \"Cha Tolagaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130009, \"gpName\": \"Cha Tolagaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441189, \"gpName\": \"Chamarray Tolagaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300108, \"gpName\": \"Chhuikhadan\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130010, \"gpName\": \"Chhuikhadan\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441185, \"gpName\": \"Chhuikhadan\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441136, \"gpName\": \"Chichdo\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 2960758, \"gpName\": \"Chiddo\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 296075, \"gpName\": \"Chiddo\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441127, \"gpName\": \"Darrabandha\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300118, \"gpName\": \"Darri\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130011, \"gpName\": \"Darri\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441105, \"gpName\": \"Dewanjhitiya\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300128, \"gpName\": \"Dhaba\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130012, \"gpName\": \"Dhaba\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441112, \"gpName\": \"Dhaba\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441106, \"gpName\": \"Dhaurabhatha\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 2960768, \"gpName\": \"Dhourabhatha\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 296076, \"gpName\": \"Dhourabhatha\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300138, \"gpName\": \"Diwanbhedi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130013, \"gpName\": \"Diwanbhedi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441171, \"gpName\": \"Diwanbhedi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300148, \"gpName\": \"Diwanjhitiya\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130014, \"gpName\": \"Diwanjhitiya\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441122, \"gpName\": \"Gatatola\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300158, \"gpName\": \"Ghorda\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130015, \"gpName\": \"Ghorda\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441186, \"gpName\": \"Ghorda\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441140, \"gpName\": \"Ghughwa\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 2635748, \"gpName\": \"Girgaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 263574, \"gpName\": \"Girgaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441119, \"gpName\": \"Girgaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300168, \"gpName\": \"Gu Nawagaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130016, \"gpName\": \"Gu Nawagaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300178, \"gpName\": \"Hardi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130017, \"gpName\": \"Hardi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441088, \"gpName\": \"Hardi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300188, \"gpName\": \"Jaarwahi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130018, \"gpName\": \"Jaarwahi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441125, \"gpName\": \"Jamsararkhurd\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300198, \"gpName\": \"Jangalpur\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130019, \"gpName\": \"Jangalpur\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441103, \"gpName\": \"Jangalpur\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300208, \"gpName\": \"Jantar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130020, \"gpName\": \"Jantar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441135, \"gpName\": \"Jantar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441115, \"gpName\": \"Jarwahi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441173, \"gpName\": \"Jhika\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441089, \"gpName\": \"Jhitiya\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300218, \"gpName\": \"Kanhardabari\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130021, \"gpName\": \"Kanhardabari\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441086, \"gpName\": \"Kanhardabri\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300228, \"gpName\": \"Karamtara\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130022, \"gpName\": \"Karamtara\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441193, \"gpName\": \"Karamtara\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441138, \"gpName\": \"Kasamsur\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300238, \"gpName\": \"Kesala\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130023, \"gpName\": \"Kesala\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441177, \"gpName\": \"Kesla\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300248, \"gpName\": \"Khamhera\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130024, \"gpName\": \"Khamhera\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441133, \"gpName\": \"Khamhera\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300258, \"gpName\": \"Khaparikala\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130025, \"gpName\": \"Khaparikala\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300268, \"gpName\": \"Khujji\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130026, \"gpName\": \"Khujji\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441157, \"gpName\": \"Khujji\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300278, \"gpName\": \"Khursipar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130027, \"gpName\": \"Khursipar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441162, \"gpName\": \"Khursipar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300288, \"gpName\": \"Kirgi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130028, \"gpName\": \"Kirgi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441168, \"gpName\": \"Kirgi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441097, \"gpName\": \"Kirgi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 2635768, \"gpName\": \"Kirgi B\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 263576, \"gpName\": \"Kirgi B\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300298, \"gpName\": \"Kohaka M\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130029, \"gpName\": \"Kohaka M\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441113, \"gpName\": \"Kohka\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 2635898, \"gpName\": \"Kohka\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 263589, \"gpName\": \"Kohka\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441153, \"gpName\": \"Kohka\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300308, \"gpName\": \"Kokpur\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130030, \"gpName\": \"Kokpur\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300318, \"gpName\": \"Konari\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130031, \"gpName\": \"Konari\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441148, \"gpName\": \"Konari\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300328, \"gpName\": \"Kopedih\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130032, \"gpName\": \"Kopedih\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300338, \"gpName\": \"Kotarasarar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130033, \"gpName\": \"Kotarasarar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441188, \"gpName\": \"Kotrasarar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300348, \"gpName\": \"Ku Bhathagaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130034, \"gpName\": \"Ku Bhathagaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441194, \"gpName\": \"Kutulbod Bhatagaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300358, \"gpName\": \"Maargaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130035, \"gpName\": \"Maargaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300368, \"gpName\": \"Machanpar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130036, \"gpName\": \"Machanpar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441104, \"gpName\": \"Machanpar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300378, \"gpName\": \"Maneri\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130037, \"gpName\": \"Maneri\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 2635878, \"gpName\": \"Marethanawagaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 263587, \"gpName\": \"Marethanawagaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441118, \"gpName\": \"Margaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300388, \"gpName\": \"Mathaldabari\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130038, \"gpName\": \"Mathaldabari\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441181, \"gpName\": \"Medha\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300398, \"gpName\": \"Mohad\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130039, \"gpName\": \"Mohad\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441152, \"gpName\": \"Mohad\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300408, \"gpName\": \"Mokhali\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130040, \"gpName\": \"Mokhali\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441184, \"gpName\": \"Mokhli\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441151, \"gpName\": \"Mothal Dabri\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300418, \"gpName\": \"Nandiya\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130041, \"gpName\": \"Nandiya\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441161, \"gpName\": \"Nandiya\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441108, \"gpName\": \"Nathu Nawagaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 2635728, \"gpName\": \"Nathunawagaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 263572, \"gpName\": \"Nathunawagaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 2635808, \"gpName\": \"Odarbandh\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 263580, \"gpName\": \"Odarbandh\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441179, \"gpName\": \"Pairi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 2635928, \"gpName\": \"Parna\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 263592, \"gpName\": \"Parna\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441163, \"gpName\": \"Parna\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300428, \"gpName\": \"Pendarwani\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130042, \"gpName\": \"Pendarwani\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441114, \"gpName\": \"Pendarwani\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300438, \"gpName\": \"Rampur\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130043, \"gpName\": \"Rampur\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441102, \"gpName\": \"Rampur\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300448, \"gpName\": \"Ratapayali\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130044, \"gpName\": \"Ratapayali\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441170, \"gpName\": \"Riwagohan\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300458, \"gpName\": \"Rudgaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130045, \"gpName\": \"Rudgaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441166, \"gpName\": \"Rudgaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300468, \"gpName\": \"Rupakathi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130046, \"gpName\": \"Rupakathi\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 2635868, \"gpName\": \"Salikjhitiya\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 263586, \"gpName\": \"Salikjhitiya\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300478, \"gpName\": \"Sambalpur\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130047, \"gpName\": \"Sambalpur\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441192, \"gpName\": \"Sambalpur\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441129, \"gpName\": \"Sangin Kachhar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300488, \"gpName\": \"Sanginkachhar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130048, \"gpName\": \"Sanginkachhar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300498, \"gpName\": \"Singarpur\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130049, \"gpName\": \"Singarpur\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300508, \"gpName\": \"Sonesarar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130050, \"gpName\": \"Sonesarar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441182, \"gpName\": \"Sonesarar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300518, \"gpName\": \"Sukhari\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130051, \"gpName\": \"Sukhari\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300528, \"gpName\": \"Tappa\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130052, \"gpName\": \"Tappa\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300538, \"gpName\": \"Tendunala\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130053, \"gpName\": \"Tendunala\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 441120, \"gpName\": \"Tilaikhar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300548, \"gpName\": \"Tilairawar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130054, \"gpName\": \"Tilairawar\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300558, \"gpName\": \"Tumadibod\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130055, \"gpName\": \"Tumadibod\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 1300568, \"gpName\": \"VI Nawagaon\"}, {\"district\": \"Rajnandgaon\", \"block\": \"Dongargaon\", \"gpCode\": 130056, \"gpName\": \"VI Nawagaon\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126216, \"gpName\": \"Aandi\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126217, \"gpName\": \"Albeda\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126218, \"gpName\": \"Anjani\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126219, \"gpName\": \"Arjuni\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126220, \"gpName\": \"Aturgaon\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126221, \"gpName\": \"Babudabena\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126222, \"gpName\": \"Bagodar\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126223, \"gpName\": \"Bardevari\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126224, \"gpName\": \"Bewarati\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126225, \"gpName\": \"Bhairadih\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126226, \"gpName\": \"Bhirawahi\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126227, \"gpName\": \"Byaskongera\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126228, \"gpName\": \"Daspur\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126229, \"gpName\": \"Dhanelikanhar\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126230, \"gpName\": \"Domaharra\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126231, \"gpName\": \"Dumali\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126232, \"gpName\": \"Gadpichhwadi\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126233, \"gpName\": \"Gotpur\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126234, \"gpName\": \"Govindpur\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126235, \"gpName\": \"Hatkongera\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126236, \"gpName\": \"Ichchhapur\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 295892, \"gpName\": \"Iradah\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126237, \"gpName\": \"Kanharpuri\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126238, \"gpName\": \"Kapsi\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126239, \"gpName\": \"Kewantintola\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126240, \"gpName\": \"Kirgoli\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126241, \"gpName\": \"Kodabhat\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126242, \"gpName\": \"Kodagaon\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126243, \"gpName\": \"Kodejunga\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126244, \"gpName\": \"Kokanpur\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126245, \"gpName\": \"Kokdi\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126246, \"gpName\": \"Kokpur\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126247, \"gpName\": \"Kulgaon\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126248, \"gpName\": \"Kuristikur\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 295895, \"gpName\": \"Makadi Singrai\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126249, \"gpName\": \"Makdikhuna\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126250, \"gpName\": \"Malgaon\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126251, \"gpName\": \"Mandari\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126252, \"gpName\": \"Mankesari\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126253, \"gpName\": \"Mardapoti\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126254, \"gpName\": \"Markatola\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126255, \"gpName\": \"Matwada\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126256, \"gpName\": \"Matwada Lal\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126257, \"gpName\": \"Mode\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126258, \"gpName\": \"Mohpur\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126259, \"gpName\": \"Muragaon\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126260, \"gpName\": \"Nara\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126261, \"gpName\": \"Nathiya Nawagaon\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126262, \"gpName\": \"Nawagaon Bhavgir\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126263, \"gpName\": \"Pandarwahi\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126264, \"gpName\": \"Patod\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126265, \"gpName\": \"Petoli\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126266, \"gpName\": \"Pidapal\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126267, \"gpName\": \"Potgaon\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 295897, \"gpName\": \"Pushawand\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126268, \"gpName\": \"Puswada\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126269, \"gpName\": \"Sarangpal\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126270, \"gpName\": \"Sidesar\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126271, \"gpName\": \"Singarbhat\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126272, \"gpName\": \"Sureli\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126273, \"gpName\": \"Talakurra\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126274, \"gpName\": \"Telawat\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126275, \"gpName\": \"Thelkabode\"}, {\"district\": \"Uttar Bastar Kanker\", \"block\": \"Kanker\", \"gpCode\": 126276, \"gpName\": \"Tultuli\"}]");
+</script>
+<script>
+/* =========================================================
+   Gram Panchayat Annual Action Plan — application logic
+   Backend: Excel workbook (SheetJS) + browser storage cache
+   ========================================================= */
+
+/* ================= i18n ================= */
+const T = {
+en: {
+  appTitle:'GP Annual Action Plan',
+  appSubtitle:'Chhattisgarh · Field Survey App · FY',
+  tabEntry:'Plan entry', tabDashboard:'Dashboard', tabDatabase:'Database',
+  step1Title:'Select the Gram Panchayat',
+  step1Sub:'Choose the GP this plan is for, under the district and block it belongs to.',
+  lblDistrict:'District', lblBlock:'Block', lblGP:'Gram Panchayat',
+  optSelDistrict:'Select district…', optSelBlock:'Select block…', optSelGP:'Select GP…',
+  step2Title:'Set the proposed planning budget',
+  step2Sub:'Total funds proposed for this GP for FY', step2SubUnit:'(₹ in Lakhs)',
+  lblBudget:'Proposed planning budget (₹ Lakhs)', phBudget:'e.g. 50',
+  hintBudget:'The final plan must use as much of this budget as possible without exceeding it.',
+  step3Title:'Add planned activities',
+  step3Sub:'Pick a category and section, then enter the number of units planned for each activity.',
+  step3SubCk:'Tick any number of sections to open their activities, then tick activities and enter quantities.',
+  lblCategory:'Category', lblSection:'Section', lblSections:'Sections (tick any number)', lblSearch:'Search activities', phSearch:'e.g. well, road, compost…',
+  thActivity:'Activity', thRate:'Rate (₹L/unit)', thLabor:'Labor %', thMaterial:'Material %', thQty:'Qty planned', thCost:'Est. cost (₹L)',
+  hSelected:'Selected activities',
+  emptyNoActivities:'No activities added yet. Choose a category and section above, then enter quantities.',
+  emptyNoMatch:'No activities match this filter.',
+  emptyNoSection:'Tick at least one section above to see its activities.',
+  sectionSubtotal:'Section subtotal',
+  hSuggest:'Suggestions to use the remaining budget',
+  subSuggest:'Activities and quantities that fit your remaining budget while keeping material cost within the 40% cap.',
+  suggestEmptyNoBudget:'Enter a budget and add at least one activity to see suggestions.',
+  suggestEmptyNone:'No further activities fit the remaining budget within the 40% material cap.',
+  suggestAdd:'Add', suggestAddQty:(q)=>'+'+q+' unit(s)',
+  suggestNote:(rem)=>'Based on ₹'+rem+' L remaining budget.',
+  step4Title:'Review & submit', step4Sub:'Check the totals below, then save a draft or submit the final plan.',
+  bbLabel:'Budget utilised',
+  lblRvGP:'Gram Panchayat', lblRvFY:'Fiscal year', lblRvCount:'Activities planned', lblRvBudget:'Proposed budget',
+  lblRvCost:'Total planned cost', lblRvUtil:'Budget utilisation', lblRvLabor:'Labor cost', lblRvMaterial:'Material cost',
+  lblGauge:'Material share of total cost (must not cross the 40% cap)',
+  gaugeL0:'0%', gaugeL40:'40% cap', gaugeL100:'100%',
+  lblStatus:'Status', optSubmittedPlans:'Submitted plans', optDraftsOnly:'Drafts only', optAllPlans:'All plans',
+  optAllDistricts:'All districts',
+  dashEmptyTitle:'No plans yet for this filter.', dashEmptyBody:'Submit a plan from the Plan entry tab, or adjust the filters above.',
+  kpiGPs:'Gram Panchayats', kpiBudget:'Total proposed budget', kpiCost:'Total planned cost', kpiRatio:'Labor : Material ratio',
+  chartLM:'Labor vs. material split', chartDistrict:'Planned cost by district', chartSection:'Planned cost by section (top 10)', chartTable:'GP plans',
+  thGP:'GP', thDistrict:'District', thBlock:'Block', thBudgetL:'Budget (₹L)', thCostL:'Cost (₹L)', thUtil:'Utilisation', thLaborPct:'Labor %', thQty2:'Qty',
+  dbTitle:'Excel database',
+  dbSub:'All submitted and draft plans are cached in this browser, and can be exported to or restored from an Excel workbook — the authoritative backend record.',
+  btnExport:'Download Excel database', btnImport:'Import Excel database', btnClear:'Clear local data',
+  dbCount:(n)=>n+' GP plan(s) stored',
+  dbEmptyTitle:'No activity records yet.', dbEmptyBody:'Submitted and saved plans will appear here as rows, matching the Excel export.',
+  footerText:'GP Annual Action Plan · Data stored locally in this browser and exportable as an Excel workbook · Not affiliated with trif.in',
+  lblBudgetShort:'Budget', lblCostShort:'Planned cost', lblRemainShort:'Remaining', lblLaborShort:'Labor', lblMaterialShort:'Material', lblRatioShort:'Labor:Material',
+  statusInProgress:'In progress', statusReady:'Ready to submit', statusOverBudget:'Over budget',
+  btnNewGP:'New GP', btnSaveDraft:'Save draft', btnSubmit:'Submit final plan',
+  overLabel:'over', leftLabel:'left',
+  gpMeta:(code,block,dist,fy)=>'GP Code <b>'+code+'</b> &nbsp;·&nbsp; Block <b>'+block+'</b> &nbsp;·&nbsp; District <b>'+dist+'</b> &nbsp;·&nbsp; Plan year <b>'+fy+'</b>',
+  reworkSubmitted:(name,fy,total)=>'A plan for <b>'+name+'</b> was already <b>submitted</b> for FY '+fy+' (total ₹'+total+' L). You can rework the activities below — resubmitting will update the stored record.',
+  reworkDraft:(name,date)=>'Continuing a saved <b>draft</b> for <b>'+name+'</b>, last saved '+date+'.',
+  errSelectGP:'Select a Gram Panchayat before proceeding.',
+  errBudgetPositive:'Enter a proposed planning budget greater than zero.',
+  errNoActivity:'Add at least one activity with a planned quantity.',
+  errOverBudget:(cost,budget,diff)=>'Planned cost (₹'+cost+' L) exceeds the proposed budget (₹'+budget+' L) by ₹'+diff+' L. Reduce quantities or remove activities so the total fits within budget.',
+  errMaterialCap:(m)=>'Material cost is '+m+'% of total planned cost, which exceeds the 40% cap. Reduce material-heavy activities or add labor-heavy activities to bring material cost to 40% or below.',
+  warnUtilLow:(u)=>'Budget utilisation is '+u+'%. Add more activities to use the budget as fully as possible without exceeding it.',
+  okReady:'This plan is within budget and material cost is within the 40% cap. Ready for final submission.',
+  confirmNewPlan:'Start a new Gram Panchayat plan? Any unsaved changes to the current plan will be lost.',
+  confirmClearDB:'This will permanently delete all locally stored GP plans on this device. Export the Excel database first if you want to keep a copy. Continue?',
+  okDraftSaved:(name)=>'Draft saved for '+name+'. You can continue editing anytime before final submission.',
+  okDraftDowngraded:'Changes saved as a draft. This plan is no longer marked as submitted — resubmit to finalise it.',
+  okSubmitted:(name)=>'Plan submitted for '+name+' and saved to the Excel database.',
+  okExport:'Excel database downloaded.',
+  errImportFile:'This file does not look like a GP Planning database export.',
+  okImport:(n)=>'Imported '+n+' GP plan(s) into the database.',
+  okClearDB:'Local database cleared.',
+  errReadFile:'Could not read that file. Please choose a database file exported from this app.',
+  statusSubmittedBadge:'submitted', statusDraftBadge:'draft',
+  langNote:'Gram Panchayat, district and block names are shown as officially recorded, in English.',
+  btnInstall:'Install app', msgOffline:'You are offline. The app keeps working and your data is saved on this device.', msgOnline:'Back online.', msgInstalled:'App installed.'
+},
+hi: {
+  appTitle:'ग्राम पंचायत वार्षिक कार्य योजना',
+  appSubtitle:'छत्तीसगढ़ · फील्ड सर्वे ऐप · वित्तीय वर्ष',
+  tabEntry:'योजना प्रविष्टि', tabDashboard:'डैशबोर्ड', tabDatabase:'डेटाबेस',
+  step1Title:'ग्राम पंचायत चुनें',
+  step1Sub:'यह योजना जिस ग्राम पंचायत हेतु है, उसे संबंधित जिला और ब्लॉक के अंतर्गत चुनें।',
+  lblDistrict:'जिला', lblBlock:'ब्लॉक', lblGP:'ग्राम पंचायत',
+  optSelDistrict:'जिला चुनें…', optSelBlock:'ब्लॉक चुनें…', optSelGP:'ग्राम पंचायत चुनें…',
+  step2Title:'प्रस्तावित योजना बजट दर्ज करें',
+  step2Sub:'इस ग्राम पंचायत हेतु वित्तीय वर्ष के लिए प्रस्तावित कुल राशि', step2SubUnit:'(₹ लाख में)',
+  lblBudget:'प्रस्तावित योजना बजट (₹ लाख)', phBudget:'जैसे 50',
+  hintBudget:'अंतिम योजना में इस बजट का अधिकतम उपयोग होना चाहिए, परंतु यह बजट से अधिक नहीं होनी चाहिए।',
+  step3Title:'नियोजित गतिविधियां जोड़ें',
+  step3Sub:'श्रेणी और अनुभाग चुनें, फिर प्रत्येक गतिविधि हेतु नियोजित इकाइयों की संख्या दर्ज करें।',
+  step3SubCk:'किसी भी संख्या में अनुभाग चुनें, फिर गतिविधियां चुनें और मात्रा दर्ज करें।',
+  lblCategory:'श्रेणी', lblSection:'अनुभाग', lblSections:'अनुभाग (किसी भी संख्या में चुनें)', lblSearch:'गतिविधियां खोजें', phSearch:'जैसे कुआं, सड़क, कम्पोस्ट…',
+  thActivity:'गतिविधि', thRate:'दर (₹ लाख/इकाई)', thLabor:'मजदूरी %', thMaterial:'सामग्री %', thQty:'नियोजित मात्रा', thCost:'अनुमानित लागत (₹ लाख)',
+  hSelected:'चयनित गतिविधियां',
+  emptyNoActivities:'अभी तक कोई गतिविधि नहीं जोड़ी गई। ऊपर श्रेणी और अनुभाग चुनें, फिर मात्रा दर्ज करें।',
+  emptyNoMatch:'इस फ़िल्टर से कोई गतिविधि मेल नहीं खाती।',
+  emptyNoSection:'गतिविधियां देखने हेतु ऊपर कम से कम एक अनुभाग चुनें।',
+  sectionSubtotal:'अनुभाग उप-योग',
+  hSuggest:'शेष बजट के उपयोग हेतु सुझाव',
+  subSuggest:'ऐसी गतिविधियां और मात्राएं जो आपके शेष बजट में समा सकें और सामग्री लागत को 40% सीमा के भीतर रखें।',
+  suggestEmptyNoBudget:'सुझाव देखने हेतु बजट दर्ज करें और कम से कम एक गतिविधि जोड़ें।',
+  suggestEmptyNone:'40% सामग्री सीमा के भीतर शेष बजट में समाने वाली कोई और गतिविधि उपलब्ध नहीं है।',
+  suggestAdd:'जोड़ें', suggestAddQty:(q)=>'+'+q+' इकाई',
+  suggestNote:(rem)=>'₹'+rem+' लाख शेष बजट के आधार पर।',
+  step4Title:'समीक्षा एवं सबमिट करें', step4Sub:'नीचे दिए गए योग की जांच करें, फिर ड्राफ्ट सहेजें या अंतिम योजना सबमिट करें।',
+  bbLabel:'बजट उपयोग',
+  lblRvGP:'ग्राम पंचायत', lblRvFY:'वित्तीय वर्ष', lblRvCount:'नियोजित गतिविधियां', lblRvBudget:'प्रस्तावित बजट',
+  lblRvCost:'कुल नियोजित लागत', lblRvUtil:'बजट उपयोग', lblRvLabor:'मजदूरी लागत', lblRvMaterial:'सामग्री लागत',
+  lblGauge:'कुल लागत में सामग्री का हिस्सा (40% सीमा से अधिक नहीं होना चाहिए)',
+  gaugeL0:'0%', gaugeL40:'40% सीमा', gaugeL100:'100%',
+  lblStatus:'स्थिति', optSubmittedPlans:'सबमिट की गई योजनाएं', optDraftsOnly:'केवल ड्राफ्ट', optAllPlans:'सभी योजनाएं',
+  optAllDistricts:'सभी जिले',
+  dashEmptyTitle:'इस फ़िल्टर हेतु अभी कोई योजना नहीं है।', dashEmptyBody:'योजना प्रविष्टि टैब से एक योजना सबमिट करें, या ऊपर फ़िल्टर बदलें।',
+  kpiGPs:'ग्राम पंचायतें', kpiBudget:'कुल प्रस्तावित बजट', kpiCost:'कुल नियोजित लागत', kpiRatio:'मजदूरी : सामग्री अनुपात',
+  chartLM:'मजदूरी बनाम सामग्री विभाजन', chartDistrict:'जिलेवार नियोजित लागत', chartSection:'अनुभागवार नियोजित लागत (शीर्ष 10)', chartTable:'ग्राम पंचायत योजनाएं',
+  thGP:'ग्राम पंचायत', thDistrict:'जिला', thBlock:'ब्लॉक', thBudgetL:'बजट (₹ लाख)', thCostL:'लागत (₹ लाख)', thUtil:'उपयोग', thLaborPct:'मजदूरी %', thQty2:'मात्रा',
+  dbTitle:'एक्सेल डेटाबेस',
+  dbSub:'सभी सबमिट व ड्राफ्ट योजनाएं इस ब्राउज़र में सहेजी जाती हैं, और एक्सेल वर्कबुक से एक्सपोर्ट/इम्पोर्ट की जा सकती हैं — यही मुख्य बैकएंड रिकॉर्ड है।',
+  btnExport:'एक्सेल डेटाबेस डाउनलोड करें', btnImport:'एक्सेल डेटाबेस आयात करें', btnClear:'स्थानीय डेटा हटाएं',
+  dbCount:(n)=>n+' ग्राम पंचायत योजना/योजनाएं सहेजी गई हैं',
+  dbEmptyTitle:'अभी तक कोई गतिविधि रिकॉर्ड नहीं है।', dbEmptyBody:'सबमिट व सहेजी गई योजनाएं यहां पंक्तियों के रूप में दिखेंगी, जो एक्सेल एक्सपोर्ट से मेल खाती हैं।',
+  footerText:'ग्राम पंचायत वार्षिक कार्य योजना · डेटा इस ब्राउज़र में स्थानीय रूप से सहेजा गया है और एक्सेल वर्कबुक के रूप में एक्सपोर्ट किया जा सकता है',
+  lblBudgetShort:'बजट', lblCostShort:'नियोजित लागत', lblRemainShort:'शेष', lblLaborShort:'मजदूरी', lblMaterialShort:'सामग्री', lblRatioShort:'मजदूरी:सामग्री',
+  statusInProgress:'प्रगति में', statusReady:'सबमिट हेतु तैयार', statusOverBudget:'बजट से अधिक',
+  btnNewGP:'नई ग्राम पंचायत', btnSaveDraft:'ड्राफ्ट सहेजें', btnSubmit:'अंतिम योजना सबमिट करें',
+  overLabel:'अधिक', leftLabel:'शेष',
+  gpMeta:(code,block,dist,fy)=>'ग्राम पंचायत कोड <b>'+code+'</b> &nbsp;·&nbsp; ब्लॉक <b>'+block+'</b> &nbsp;·&nbsp; जिला <b>'+dist+'</b> &nbsp;·&nbsp; योजना वर्ष <b>'+fy+'</b>',
+  reworkSubmitted:(name,fy,total)=>'<b>'+name+'</b> हेतु वित्तीय वर्ष '+fy+' के लिए योजना पहले ही <b>सबमिट</b> की जा चुकी है (कुल ₹'+total+' लाख)। आप नीचे गतिविधियों में संशोधन कर सकते हैं — पुनः सबमिट करने पर सहेजा गया रिकॉर्ड अपडेट हो जाएगा।',
+  reworkDraft:(name,date)=>'<b>'+name+'</b> हेतु सहेजा गया <b>ड्राफ्ट</b> जारी रखा जा रहा है, अंतिम बार सहेजा गया '+date+'।',
+  errSelectGP:'आगे बढ़ने से पहले एक ग्राम पंचायत चुनें।',
+  errBudgetPositive:'शून्य से अधिक प्रस्तावित योजना बजट दर्ज करें।',
+  errNoActivity:'कम से कम एक गतिविधि की नियोजित मात्रा दर्ज करें।',
+  errOverBudget:(cost,budget,diff)=>'नियोजित लागत (₹'+cost+' लाख) प्रस्तावित बजट (₹'+budget+' लाख) से ₹'+diff+' लाख अधिक है। मात्रा घटाएं या गतिविधियां हटाएं ताकि कुल राशि बजट में समा सके।',
+  errMaterialCap:(m)=>'सामग्री लागत कुल नियोजित लागत का '+m+'% है, जो 40% सीमा से अधिक है। सामग्री-प्रधान गतिविधियां घटाएं या मजदूरी-प्रधान गतिविधियां जोड़ें ताकि सामग्री लागत 40% या उससे कम हो।',
+  warnUtilLow:(u)=>'बजट उपयोग '+u+'% है। बजट का अधिकतम उपयोग करने हेतु और गतिविधियां जोड़ें, परंतु यह बजट से अधिक न हो।',
+  okReady:'यह योजना बजट के भीतर है और सामग्री लागत 40% सीमा के भीतर है। यह अंतिम सबमिशन हेतु तैयार है।',
+  confirmNewPlan:'क्या नई ग्राम पंचायत योजना शुरू करें? वर्तमान योजना के असहेजे गए परिवर्तन समाप्त हो जाएंगे।',
+  confirmClearDB:'इससे इस डिवाइस पर सहेजी गई सभी ग्राम पंचायत योजनाएं स्थायी रूप से हट जाएंगी। यदि आप एक प्रति रखना चाहते हैं तो पहले एक्सेल डेटाबेस डाउनलोड करें। जारी रखें?',
+  okDraftSaved:(name)=>name+' हेतु ड्राफ्ट सहेजा गया। आप अंतिम सबमिशन से पहले कभी भी संपादन जारी रख सकते हैं।',
+  okDraftDowngraded:'परिवर्तन ड्राफ्ट के रूप में सहेजे गए। यह योजना अब सबमिट नहीं मानी जाएगी — अंतिम रूप देने हेतु पुनः सबमिट करें।',
+  okSubmitted:(name)=>name+' हेतु योजना सबमिट की गई और एक्सेल डेटाबेस में सहेजी गई।',
+  okExport:'एक्सेल डेटाबेस डाउनलोड किया गया।',
+  errImportFile:'यह फ़ाइल इस ऐप से एक्सपोर्ट किए गए डेटाबेस जैसी प्रतीत नहीं होती।',
+  okImport:(n)=>n+' ग्राम पंचायत योजना/योजनाएं डेटाबेस में आयात की गईं।',
+  okClearDB:'स्थानीय डेटाबेस साफ़ कर दिया गया।',
+  errReadFile:'फ़ाइल पढ़ी नहीं जा सकी। कृपया इस ऐप से एक्सपोर्ट की गई डेटाबेस फ़ाइल चुनें।',
+  statusSubmittedBadge:'सबमिट', statusDraftBadge:'ड्राफ्ट',
+  langNote:'ग्राम पंचायत, जिला व ब्लॉक के नाम आधिकारिक रिकॉर्ड अनुसार अंग्रेज़ी में दिखाए गए हैं।',
+  btnInstall:'ऐप इंस्टॉल करें', msgOffline:'आप ऑफ़लाइन हैं। ऐप चलता रहेगा और आपका डेटा इसी डिवाइस पर सहेजा जाएगा।', msgOnline:'ऑनलाइन वापस।', msgInstalled:'ऐप इंस्टॉल हो गया।'
+}
+};
+let LANG = safeStorageGet('triGPPlanLang') || 'en';
+function safeStorageGet(key){ try{ return localStorage.getItem(key); }catch(e){ return null; } }
+function safeStorageSet(key, val){ try{ localStorage.setItem(key, val); }catch(e){ /* storage unavailable in this browser context; continue without persistence */ } }
+function t(key){ return T[LANG][key]; }
+function labelFocus(fg){ return LANG==='hi' ? (FOCUS_HI[fg]||fg) : fg; }
+function labelWorkType(wt){ return LANG==='hi' ? (WORKTYPE_HI[wt]||wt) : wt; }
+function labelActivity(a){ return LANG==='hi' ? (a.activityHi||a.activity) : a.activity; }
+
+/* ---------- Master data lookups ---------- */
+const ACT_BY_ID = {};
+ACTIVITIES.forEach(a => { ACT_BY_ID[a.id] = a; });
+
+const FOCUS_GROUPS = [...new Set(ACTIVITIES.map(a => a.focusGroup))];
+const FOCUS_HI = {};
+ACTIVITIES.forEach(a=>{ FOCUS_HI[a.focusGroup] = a.focusGroupHi || a.focusGroup; });
+const WORKTYPE_HI = {};
+ACTIVITIES.forEach(a=>{ WORKTYPE_HI[a.workType] = a.workTypeHi || a.workType; });
+const WORKTYPES_BY_FOCUS = {};
+FOCUS_GROUPS.forEach(fg => {
+  WORKTYPES_BY_FOCUS[fg] = [...new Set(ACTIVITIES.filter(a => a.focusGroup === fg).map(a => a.workType))];
+});
+
+const DISTRICTS = [...new Set(GPS.map(g => g.district))].sort();
+const BLOCKS_BY_DISTRICT = {};
+const GPS_BY_BLOCK = {};
+DISTRICTS.forEach(d => {
+  BLOCKS_BY_DISTRICT[d] = [...new Set(GPS.filter(g => g.district === d).map(g => g.block))].sort();
+});
+GPS.forEach(g => {
+  const key = g.district + '||' + g.block;
+  (GPS_BY_BLOCK[key] = GPS_BY_BLOCK[key] || []).push(g);
+});
+Object.values(GPS_BY_BLOCK).forEach(list => list.sort((a,b)=>a.gpName.localeCompare(b.gpName)));
+
+/* ---------- Fiscal year (India: Apr–Mar), computed at runtime ---------- */
+function getFYLabel(offsetYears){
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  let fyStart = (m >= 3) ? y : y - 1;
+  fyStart += offsetYears;
+  const endShort = String((fyStart + 1) % 100).padStart(2, '0');
+  return fyStart + '-' + endShort;
+}
+const PLAN_FY = getFYLabel(1);
+
+/* ---------- Ratio policy: Labor:Material target 60:40.
+   Deviation is permitted only in favor of labor (labor may exceed 60%);
+   material cost must never exceed 40% of total planned cost. ---------- */
+const MATERIAL_CAP_PCT = 40;
+
+/* ---------- Persistent store ---------- */
+const STORAGE_KEY = 'triGPPlanDB_v1';
+let DB = loadDB();
+function loadDB(){
+  try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw) return JSON.parse(raw); }catch(e){}
+  return { plans: {} };
+}
+function persist(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); }catch(e){}
+}
+function planKey(gpCode, fy){ return gpCode + '__' + fy; }
+
+/* ---------- Current working plan ---------- */
+let plan = null;
+function newBlankPlan(){
+  return { gpCode:null, gpName:null, district:null, block:null, fyLabel:PLAN_FY,
+           budget:null, status:'draft', lines:{}, lastSavedAt:null, submittedAt:null };
+}
+plan = newBlankPlan();
+
+/* ---------- Totals / validation ---------- */
+function computeTotals(p){
+  let totalCost=0, laborCost=0, materialCost=0, lineCount=0;
+  const bySection = {};
+  Object.entries(p.lines).forEach(([id, qty]) => {
+    qty = Number(qty)||0;
+    if(qty<=0) return;
+    const a = ACT_BY_ID[id];
+    if(!a) return;
+    const cost = a.rate * qty;
+    const labor = cost * a.pctLabor/100;
+    const material = cost * a.pctMaterial/100;
+    totalCost += cost; laborCost += labor; materialCost += material; lineCount++;
+    const key = labelFocus(a.focusGroup) + ' — ' + labelWorkType(a.workType);
+    if(!bySection[key]) bySection[key] = {cost:0,labor:0,material:0,count:0};
+    bySection[key].cost += cost; bySection[key].labor += labor; bySection[key].material += material; bySection[key].count++;
+  });
+  return {totalCost, laborCost, materialCost, lineCount, bySection};
+}
+
+function validatePlan(p, forSubmit){
+  const errors = []; const warnings = [];
+  const totals = computeTotals(p);
+  if(!p.gpCode) errors.push(t('errSelectGP'));
+  if(p.budget===null || p.budget===undefined || isNaN(p.budget) || p.budget<=0) errors.push(t('errBudgetPositive'));
+  if(forSubmit){
+    if(totals.lineCount===0) errors.push(t('errNoActivity'));
+    if(p.budget && totals.totalCost > p.budget + 0.0001){
+      errors.push(t('errOverBudget')(fmt(totals.totalCost), fmt(p.budget), fmt(totals.totalCost-p.budget)));
+    }
+    if(totals.totalCost>0){
+      const materialShare = totals.materialCost/totals.totalCost*100;
+      if(materialShare > MATERIAL_CAP_PCT + 0.0001){
+        errors.push(t('errMaterialCap')(materialShare.toFixed(1)));
+      }
+    }
+  }
+  if(p.budget && totals.totalCost>0 && totals.totalCost<=p.budget){
+    const util = totals.totalCost/p.budget*100;
+    if(util < 85) warnings.push(t('warnUtilLow')(util.toFixed(1)));
+  }
+  return {errors, warnings, totals};
+}
+
+function fmt(n){ return (Math.round((n||0)*100)/100).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+/* ---------- Suggestion engine: fill remaining budget, keep material <=40% ---------- */
+function generateSuggestions(p){
+  const totals = computeTotals(p);
+  const remaining = (p.budget||0) - totals.totalCost;
+  if(!p.budget || remaining <= 0.0049) return { list:[], remaining };
+  const results = [];
+  ACTIVITIES.forEach(a=>{
+    const r = a.rate;
+    if(r<=0) return;
+    const maxQtyBudget = Math.floor((remaining+1e-9)/r);
+    if(maxQtyBudget<1) return;
+    let maxQtyRatio = Infinity;
+    const m = a.pctMaterial/100;
+    const capFrac = MATERIAL_CAP_PCT/100;
+    if(m > capFrac + 1e-9){
+      const numer = capFrac*totals.totalCost - totals.materialCost;
+      const denom = r*(m-capFrac);
+      maxQtyRatio = denom>0 ? Math.floor((numer+1e-9)/denom) : 0;
+      if(maxQtyRatio<0) maxQtyRatio = 0;
+    }
+    const maxQty = Math.min(maxQtyBudget, maxQtyRatio);
+    if(maxQty>=1) results.push({a, qty:maxQty, cost:maxQty*r});
+  });
+  results.sort((x,y)=> y.cost-x.cost);
+  return { list: results.slice(0,8), remaining };
+}
+
+/* ---------- Toast ---------- */
+let toastTimer=null;
+function toast(kind, msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + (kind==='error'?'err':(kind==='ok'?'ok':''));
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ el.className=''; }, 4200);
+}
+
+/* ---------- Tab navigation ---------- */
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
+  document.getElementById('summary-bar').style.display = (name==='entry') ? 'flex' : 'none';
+  if(name==='dashboard') renderDashboard();
+  if(name==='database') renderDatabaseView();
+}
+
+/* ================= LANGUAGE ================= */
+function applyLanguage(lang){
+  LANG = lang;
+  safeStorageSet('triGPPlanLang', lang);
+  document.documentElement.lang = lang;
+  document.body.style.fontFamily = lang==='hi' ? "'Noto Sans Devanagari','Inter',system-ui,sans-serif" : "'Inter',system-ui,sans-serif";
+  document.querySelectorAll('.lang-toggle button').forEach(b=>b.classList.toggle('active', b.dataset.lang===lang));
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.dataset.i18n;
+    if(T[lang][key]!==undefined) el.innerHTML = T[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
+    const key = el.dataset.i18nPlaceholder;
+    if(T[lang][key]!==undefined) el.placeholder = T[lang][key];
+  });
+  // district selects use plain names (no translation), but their default first option text needs updating
+  populateDistrictSelect(document.getElementById('sel-district').value);
+  refreshBlockGPOptions();
+  populateSectionChecks();
+  document.getElementById('dash-district').innerHTML = '<option value="">'+t('optAllDistricts')+'</option>' + DISTRICTS.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+  refreshGPMeta();
+  document.getElementById('lang-note').style.display = lang==='hi' ? 'block' : 'none';
+  document.getElementById('lang-note').textContent = t('langNote');
+  onPlanChanged();
+  renderDashboard();
+  renderDatabaseView();
+}
+
+function refreshGPMeta(){
+  const metaEl = document.getElementById('gp-meta');
+  if(plan && plan.gpCode){
+    metaEl.innerHTML = t('gpMeta')(plan.gpCode, escapeHtml(plan.block), escapeHtml(plan.district), PLAN_FY);
+  } else {
+    metaEl.textContent = '';
+  }
+  const reworkBanner = document.getElementById('rework-banner');
+  if(plan && plan.gpCode && reworkBanner.dataset.kind){
+    if(reworkBanner.dataset.kind==='submitted'){
+      reworkBanner.innerHTML = t('reworkSubmitted')(escapeHtml(plan.gpName), plan.fyLabel, fmt(computeTotals(plan).totalCost));
+    } else if(reworkBanner.dataset.kind==='draft'){
+      reworkBanner.innerHTML = t('reworkDraft')(escapeHtml(plan.gpName), reworkBanner.dataset.date||'—');
+    }
+  }
+}
+
+/* ================= ENTRY VIEW ================= */
+function populateDistrictSelect(keepValue){
+  const distSel = document.getElementById('sel-district');
+  distSel.innerHTML = `<option value="">${t('optSelDistrict')}</option>` + DISTRICTS.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+  if(keepValue) distSel.value = keepValue;
+}
+function refreshBlockGPOptions(){
+  const d = document.getElementById('sel-district').value;
+  const blockSel = document.getElementById('sel-block');
+  const gpSel = document.getElementById('sel-gp');
+  const keepBlock = blockSel.value, keepGP = gpSel.value;
+  if(!d){
+    blockSel.innerHTML = `<option value="">${t('optSelBlock')}</option>`; blockSel.disabled = true;
+    gpSel.innerHTML = `<option value="">${t('optSelGP')}</option>`; gpSel.disabled = true;
+    return;
+  }
+  blockSel.disabled = false;
+  blockSel.innerHTML = `<option value="">${t('optSelBlock')}</option>` + BLOCKS_BY_DISTRICT[d].map(b=>`<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
+  if(keepBlock) blockSel.value = keepBlock;
+  const b = blockSel.value;
+  if(!b){ gpSel.innerHTML = `<option value="">${t('optSelGP')}</option>`; gpSel.disabled = true; return; }
+  const list = GPS_BY_BLOCK[d+'||'+b] || [];
+  gpSel.disabled = false;
+  gpSel.innerHTML = `<option value="">${t('optSelGP')}</option>` + list.map(g=>`<option value="${g.gpCode}">${escapeHtml(g.gpName)}</option>`).join('');
+  if(keepGP) gpSel.value = keepGP;
+}
+
+function initEntryView(){
+  populateDistrictSelect();
+  document.getElementById('sel-district').addEventListener('change', ()=>{
+    refreshBlockGPOptions();
+    onGPChange(null);
+  });
+  document.getElementById('sel-block').addEventListener('change', ()=>{
+    const d = document.getElementById('sel-district').value, b = document.getElementById('sel-block').value;
+    const gpSel = document.getElementById('sel-gp');
+    if(!b){ gpSel.innerHTML = `<option value="">${t('optSelGP')}</option>`; gpSel.disabled = true; onGPChange(null); return; }
+    const list = GPS_BY_BLOCK[d+'||'+b] || [];
+    gpSel.disabled = false;
+    gpSel.innerHTML = `<option value="">${t('optSelGP')}</option>` + list.map(g=>`<option value="${g.gpCode}">${escapeHtml(g.gpName)}</option>`).join('');
+    onGPChange(null);
+  });
+  document.getElementById('sel-gp').addEventListener('change', (e)=>{
+    const code = Number(e.target.value)||null;
+    onGPChange(code ? GPS.find(g=>g.gpCode===code) : null);
+  });
+
+  document.getElementById('inp-budget').addEventListener('input', (e)=>{
+    plan.budget = e.target.value===''? null : Number(e.target.value);
+    onPlanChanged();
+  });
+
+  document.getElementById('inp-search').addEventListener('input', renderActivityPicker);
+
+  document.getElementById('btn-save-draft').addEventListener('click', saveDraft);
+  document.getElementById('btn-submit').addEventListener('click', submitFinal);
+  document.getElementById('btn-new-plan').addEventListener('click', ()=>{
+    if(confirm(t('confirmNewPlan'))){
+      plan = newBlankPlan();
+      document.getElementById('sel-district').value='';
+      refreshBlockGPOptions();
+      document.getElementById('inp-budget').value='';
+      document.getElementById('rework-banner').style.display='none';
+      document.getElementById('rework-banner').dataset.kind='';
+      onPlanChanged();
+    }
+  });
+
+  document.querySelectorAll('.lang-toggle button').forEach(b=>{
+    b.addEventListener('click', ()=>applyLanguage(b.dataset.lang));
+  });
+
+  populateSectionChecks();
+  onPlanChanged();
+}
+
+/* Checked sections state: Set of "focusGroup||workType" keys */
+let CHECKED_SECTIONS = new Set();
+
+function populateSectionChecks(){
+  const box = document.getElementById('section-checks');
+  const groupsHtml = FOCUS_GROUPS.map(fg=>{
+    const items = (WORKTYPES_BY_FOCUS[fg]||[]).map(wt=>{
+      const key = fg+'||'+wt;
+      const checked = CHECKED_SECTIONS.has(key);
+      return `<label class="sc-item${checked?' checked':''}" data-key="${escapeHtml(key)}">
+        <input type="checkbox" ${checked?'checked':''} data-key="${escapeHtml(key)}"> ${escapeHtml(labelWorkType(wt))}
+      </label>`;
+    }).join('');
+    return `<div class="sc-group"><span class="sc-group-title">${escapeHtml(labelFocus(fg))}</span>${items}</div>`;
+  }).join('');
+  box.innerHTML = groupsHtml;
+  box.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change', (e)=>{
+      const key = e.target.dataset.key;
+      if(e.target.checked) CHECKED_SECTIONS.add(key); else CHECKED_SECTIONS.delete(key);
+      e.target.closest('.sc-item').classList.toggle('checked', e.target.checked);
+      renderActivityPicker();
+    });
+  });
+}
+
+function onGPChange(gp){
+  const reworkBanner = document.getElementById('rework-banner');
+  reworkBanner.style.display='none';
+  reworkBanner.dataset.kind='';
+  if(!gp){
+    plan = newBlankPlan();
+    document.getElementById('inp-budget').value='';
+    refreshGPMeta();
+    onPlanChanged();
+    return;
+  }
+  const existingKey = planKey(gp.gpCode, PLAN_FY);
+  const existing = DB.plans[existingKey];
+  if(existing){
+    plan = JSON.parse(JSON.stringify(existing));
+    document.getElementById('inp-budget').value = plan.budget!==null ? plan.budget : '';
+    if(plan.status==='submitted'){
+      reworkBanner.style.display='block';
+      reworkBanner.dataset.kind='submitted';
+    } else {
+      reworkBanner.style.display='block';
+      reworkBanner.dataset.kind='draft';
+      reworkBanner.dataset.date = plan.lastSavedAt ? new Date(plan.lastSavedAt).toLocaleString(LANG==='hi'?'hi-IN':'en-IN') : '—';
+    }
+  } else {
+    plan = newBlankPlan();
+    plan.gpCode = gp.gpCode; plan.gpName = gp.gpName; plan.district = gp.district; plan.block = gp.block;
+    document.getElementById('inp-budget').value='';
+  }
+  refreshGPMeta();
+  Object.keys(plan.lines).forEach(id=>{
+    const a = ACT_BY_ID[id];
+    if(a) CHECKED_SECTIONS.add(a.focusGroup+'||'+a.workType);
+  });
+  populateSectionChecks();
+  onPlanChanged();
+}
+
+function onPlanChanged(){
+  const ready = !!(plan.gpCode && plan.budget && plan.budget>0);
+  document.getElementById('panel-activities').classList.toggle('disabled', !ready);
+  document.getElementById('panel-review').classList.toggle('disabled', !ready);
+  renderActivityPicker();
+  renderSelectedList();
+  renderSuggestions();
+  renderSummary();
+}
+
+function renderActivityPicker(){
+  const q = (document.getElementById('inp-search').value||'').toLowerCase().trim();
+  let list = ACTIVITIES.filter(a=> CHECKED_SECTIONS.has(a.focusGroup+'||'+a.workType));
+  if(q) list = list.filter(a=> a.activity.toLowerCase().includes(q) || (a.activityHi||'').includes(q));
+  const tbody = document.getElementById('activity-tbody');
+  if(CHECKED_SECTIONS.size===0){
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-note">${escapeHtml(t('emptyNoSection'))}</td></tr>`;
+    return;
+  }
+  if(list.length===0){
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-note">${escapeHtml(t('emptyNoMatch'))}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(a=>{
+    const qty = plan.lines[a.id]||0;
+    const cost = a.rate*qty;
+    return `<tr class="${qty>0?'has-qty':''}" data-id="${a.id}">
+      <td><input type="checkbox" class="act-check" data-id="${a.id}" ${qty>0?'checked':''}></td>
+      <td><span class="wa-name">${escapeHtml(labelActivity(a))}</span></td>
+      <td class="right num">${fmt(a.rate)}</td>
+      <td class="right num">${a.pctLabor}%</td>
+      <td class="right num">${a.pctMaterial}%</td>
+      <td><input type="number" min="0" step="1" class="qty-input" value="${qty||''}" placeholder="0" data-id="${a.id}"></td>
+      <td class="right num line-cost">${cost>0?fmt(cost):'—'}</td>
+    </tr>`;
+  }).join('');
+  tbody.querySelectorAll('input.act-check').forEach(cb=>{
+    cb.addEventListener('change', (e)=>{
+      const id = e.target.dataset.id;
+      const row = e.target.closest('tr');
+      const qtyInp = row.querySelector('.qty-input');
+      if(e.target.checked){
+        const v = (plan.lines[id]&&plan.lines[id]>0) ? plan.lines[id] : 1;
+        plan.lines[id] = v;
+        qtyInp.value = v;
+      } else {
+        delete plan.lines[id];
+        qtyInp.value = '';
+      }
+      const a = ACT_BY_ID[id];
+      const cost = a.rate*(plan.lines[id]||0);
+      row.querySelector('.line-cost').textContent = cost>0? fmt(cost) : '—';
+      row.classList.toggle('has-qty', !!plan.lines[id]);
+      renderSelectedList(); renderSuggestions(); renderSummary();
+    });
+  });
+  tbody.querySelectorAll('input.qty-input').forEach(inp=>{
+    inp.addEventListener('input', (e)=>{
+      const id = e.target.dataset.id;
+      let v = parseInt(e.target.value,10);
+      if(isNaN(v) || v<0) v = 0;
+      if(v===0) delete plan.lines[id]; else plan.lines[id]=v;
+      const row = e.target.closest('tr');
+      row.querySelector('.act-check').checked = v>0;
+      const a = ACT_BY_ID[id];
+      const cost = a.rate*v;
+      row.querySelector('.line-cost').textContent = cost>0? fmt(cost) : '—';
+      row.classList.toggle('has-qty', v>0);
+      renderSelectedList(); renderSuggestions(); renderSummary();
+    });
+  });
+}
+
+function renderSelectedList(){
+  const wrap = document.getElementById('selected-list');
+  const entries = Object.entries(plan.lines).filter(([,q])=>q>0);
+  if(entries.length===0){
+    wrap.innerHTML = `<p class="empty-note">${escapeHtml(t('emptyNoActivities'))}</p>`;
+    return;
+  }
+  const groups = {};
+  entries.forEach(([id,qty])=>{
+    const a = ACT_BY_ID[id];
+    const key = labelFocus(a.focusGroup) + ' — ' + labelWorkType(a.workType);
+    (groups[key]=groups[key]||[]).push({a,qty});
+  });
+  let html='';
+  Object.entries(groups).forEach(([key,items])=>{
+    let subtotal=0;
+    const rows = items.map(({a,qty})=>{
+      const cost = a.rate*qty; subtotal+=cost;
+      return `<div class="selected-line" data-id="${a.id}">
+        <div class="name"><div class="wa">${escapeHtml(labelActivity(a))}</div><div class="meta">₹${fmt(a.rate)} L/unit · L${a.pctLabor}:M${a.pctMaterial}</div></div>
+        <input type="number" min="0" step="1" class="qty-input sel-qty" value="${qty}" data-id="${a.id}">
+        <div class="cost num">₹${fmt(cost)} L</div>
+        <button class="remove-x" title="Remove" data-id="${a.id}">✕</button>
+      </div>`;
+    }).join('');
+    html += `<div class="selected-group"><h4>${escapeHtml(key)} — ${escapeHtml(t('sectionSubtotal'))} ₹${fmt(subtotal)} L</h4>${rows}</div>`;
+  });
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('.sel-qty').forEach(inp=>{
+    inp.addEventListener('input', (e)=>{
+      const id=e.target.dataset.id; let v=parseInt(e.target.value,10);
+      if(isNaN(v)||v<0) v=0;
+      if(v===0) delete plan.lines[id]; else plan.lines[id]=v;
+      renderActivityPicker(); renderSelectedList(); renderSuggestions(); renderSummary();
+    });
+  });
+  wrap.querySelectorAll('.remove-x').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      delete plan.lines[e.currentTarget.dataset.id];
+      renderActivityPicker(); renderSelectedList(); renderSuggestions(); renderSummary();
+    });
+  });
+}
+
+function renderSuggestions(){
+  const box = document.getElementById('suggest-box');
+  if(!plan.gpCode || !plan.budget || plan.budget<=0){
+    box.innerHTML = `<p class="suggest-empty">${escapeHtml(t('suggestEmptyNoBudget'))}</p>`;
+    return;
+  }
+  const { list, remaining } = generateSuggestions(plan);
+  if(remaining<=0.0049){
+    box.innerHTML = `<p class="suggest-empty">${escapeHtml(t('suggestEmptyNone'))}</p>`;
+    return;
+  }
+  if(list.length===0){
+    box.innerHTML = `<p class="suggest-empty">${escapeHtml(t('suggestNote')(fmt(remaining)))} ${escapeHtml(t('suggestEmptyNone'))}</p>`;
+    return;
+  }
+  const items = list.map(({a,qty,cost})=>{
+    return `<div class="suggest-item" data-id="${a.id}" data-qty="${qty}">
+      <div class="si-name"><div class="wa">${escapeHtml(labelActivity(a))}</div><div class="meta">${escapeHtml(labelFocus(a.focusGroup))} — ${escapeHtml(labelWorkType(a.workType))} · ₹${fmt(a.rate)} L/unit · L${a.pctLabor}:M${a.pctMaterial}</div></div>
+      <div class="si-qty">${escapeHtml(t('suggestAddQty')(qty))}</div>
+      <div class="si-cost num">₹${fmt(cost)} L</div>
+      <button class="btn btn-accent btn-sm suggest-add-btn" data-id="${a.id}" data-qty="${qty}">${escapeHtml(t('suggestAdd'))}</button>
+    </div>`;
+  }).join('');
+  box.innerHTML = `<p class="suggest-empty" style="margin-bottom:8px;">${escapeHtml(t('suggestNote')(fmt(remaining)))}</p><div class="suggest-list">${items}</div>`;
+  box.querySelectorAll('.suggest-add-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      const id = e.currentTarget.dataset.id;
+      const addQty = Number(e.currentTarget.dataset.qty)||0;
+      plan.lines[id] = (plan.lines[id]||0) + addQty;
+      renderActivityPicker(); renderSelectedList(); renderSuggestions(); renderSummary();
+    });
+  });
+}
+
+function renderSummary(){
+  const {errors, warnings, totals} = validatePlan(plan, false);
+  document.getElementById('sum-budget').textContent = plan.budget? '₹'+fmt(plan.budget)+' L' : '—';
+  document.getElementById('sum-cost').textContent = '₹'+fmt(totals.totalCost)+' L';
+  const remain = (plan.budget||0) - totals.totalCost;
+  const remainEl = document.getElementById('sum-remain');
+  remainEl.textContent = (plan.budget? ('₹'+fmt(Math.abs(remain))+' L '+(remain>=0?t('leftLabel'):t('overLabel'))) : '—');
+  remainEl.style.color = remain<0 ? '#ff8f7c' : '#fff';
+  document.getElementById('sum-labor').textContent = '₹'+fmt(totals.laborCost)+' L';
+  document.getElementById('sum-material').textContent = '₹'+fmt(totals.materialCost)+' L';
+  const laborShare = totals.totalCost>0 ? totals.laborCost/totals.totalCost*100 : 0;
+  const materialShare = totals.totalCost>0 ? totals.materialCost/totals.totalCost*100 : 0;
+  document.getElementById('sum-ratio').textContent = totals.totalCost>0 ? laborShare.toFixed(1)+' : '+materialShare.toFixed(1) : '—';
+
+  const forSubmit = validatePlan(plan, true);
+  const pill = document.getElementById('sum-status');
+  const summaryBar = document.getElementById('summary-bar');
+  let barState = 'neutral';
+  if(forSubmit.errors.length===0 && totals.lineCount>0){ pill.className='status-pill status-ok'; pill.textContent=t('statusReady'); barState='good'; }
+  else if(remain<0 || materialShare>MATERIAL_CAP_PCT+0.0001){ pill.className='status-pill status-bad'; pill.textContent=t('statusOverBudget'); barState='bad'; }
+  else { pill.className='status-pill status-warn'; pill.textContent=t('statusInProgress'); barState='warn'; }
+  summaryBar.style.background = barState==='good' ? 'var(--good)' : (barState==='bad' ? 'var(--bad)' : (barState==='warn' ? 'var(--ink)' : 'var(--ink)'));
+
+  // gauge: material share vs 40% cap
+  const gaugeFill = document.getElementById('gauge-fill');
+  gaugeFill.style.width = Math.min(100,Math.max(0,materialShare)) + '%';
+  gaugeFill.style.background = materialShare<=MATERIAL_CAP_PCT+0.0001 ? 'var(--good)' : 'var(--bad)';
+
+  // prominent budget banner
+  const bbPct = document.getElementById('bb-pct');
+  const bbCost = document.getElementById('bb-cost');
+  const bbRemain = document.getElementById('bb-remain');
+  const banner = document.getElementById('budget-banner');
+  const util = plan.budget ? (totals.totalCost/plan.budget*100) : 0;
+  bbPct.textContent = plan.budget ? util.toFixed(1)+'%' : '—';
+  bbCost.textContent = t('lblRvCost')+': ₹'+fmt(totals.totalCost)+' L';
+  bbRemain.textContent = plan.budget ? ('₹'+fmt(Math.abs(remain))+' L '+(remain>=0?t('leftLabel'):t('overLabel'))) : '—';
+  banner.className = 'budget-banner ' + (
+    !plan.budget ? 'st-neutral' :
+    remain<0 ? 'st-bad' :
+    util>=85 ? 'st-good' : 'st-warn'
+  );
+
+  const msgList = document.getElementById('review-messages');
+  const allMsgs = [];
+  forSubmit.errors.forEach(m=>allMsgs.push({t:'err',m}));
+  forSubmit.warnings.forEach(m=>allMsgs.push({t:'warn',m}));
+  if(allMsgs.length===0 && totals.lineCount>0) allMsgs.push({t:'ok', m:t('okReady')});
+  msgList.innerHTML = allMsgs.map(x=>`<li class="msg-${x.t}">${escapeHtml(x.m)}</li>`).join('');
+
+  document.getElementById('rv-gp').textContent = plan.gpName ? (plan.gpName+' ('+plan.district+', '+plan.block+')') : '—';
+  document.getElementById('rv-fy').textContent = PLAN_FY;
+  document.getElementById('rv-budget').textContent = plan.budget? '₹'+fmt(plan.budget)+' L' : '—';
+  document.getElementById('rv-cost').textContent = '₹'+fmt(totals.totalCost)+' L';
+  document.getElementById('rv-util').textContent = plan.budget? util.toFixed(1)+'%' : '—';
+  document.getElementById('rv-labor').textContent = '₹'+fmt(totals.laborCost)+' L';
+  document.getElementById('rv-material').textContent = '₹'+fmt(totals.materialCost)+' L';
+  document.getElementById('rv-count').textContent = totals.lineCount;
+
+  document.getElementById('btn-submit').disabled = forSubmit.errors.length>0;
+}
+
+function saveDraft(){
+  const v = validatePlan(plan, false);
+  if(v.errors.length){ toast('error', v.errors[0]); return; }
+  const wasSubmitted = plan.status === 'submitted';
+  plan.status = 'draft';
+  plan.lastSavedAt = new Date().toISOString();
+  DB.plans[planKey(plan.gpCode, plan.fyLabel)] = JSON.parse(JSON.stringify(plan));
+  persist();
+  renderSummary();
+  toast('ok', wasSubmitted ? t('okDraftDowngraded') : t('okDraftSaved')(plan.gpName));
+}
+
+function submitFinal(){
+  const v = validatePlan(plan, true);
+  if(v.errors.length){ toast('error', v.errors[0]); renderSummary(); return; }
+  plan.status = 'submitted';
+  plan.submittedAt = new Date().toISOString();
+  plan.lastSavedAt = plan.submittedAt;
+  DB.plans[planKey(plan.gpCode, plan.fyLabel)] = JSON.parse(JSON.stringify(plan));
+  persist();
+  exportExcel(true);
+  document.getElementById('rework-banner').style.display='none';
+  document.getElementById('rework-banner').dataset.kind='';
+  toast('ok', t('okSubmitted')(plan.gpName));
+  renderSummary();
+}
+
+/* ================= EXCEL (SheetJS) ================= */
+function buildWorkbook(){
+  const wb = XLSX.utils.book_new();
+  const summaryHeader = ['GP Code','GP Name','District','Block','Fiscal Year','Proposed Budget (Rs Lakhs)','Total Planned Cost (Rs Lakhs)','Budget Utilisation %','Labor Cost (Rs Lakhs)','Material Cost (Rs Lakhs)','Labor %','Material %','Activity Count','Status','Last Saved','Submitted On'];
+  const detailHeader = ['GP Code','GP Name','District','Block','Fiscal Year','Activity ID','Focus Group','Focus Group (Hindi)','Section (Work Type)','Section (Hindi)','Activity Description','Activity Description (Hindi)','Unit Rate (Rs Lakhs)','Labor %','Material %','Quantity Planned','Total Cost (Rs Lakhs)','Labor Cost (Rs Lakhs)','Material Cost (Rs Lakhs)'];
+  const summaryRows=[summaryHeader]; const detailRows=[detailHeader];
+  Object.values(DB.plans).forEach(p=>{
+    const tt = computeTotals(p);
+    const laborShare = tt.totalCost>0? tt.laborCost/tt.totalCost*100 : 0;
+    summaryRows.push([p.gpCode,p.gpName,p.district,p.block,p.fyLabel,round2(p.budget),round2(tt.totalCost),
+      p.budget? round2(tt.totalCost/p.budget*100):0, round2(tt.laborCost), round2(tt.materialCost),
+      round2(laborShare), round2(100-laborShare), tt.lineCount, p.status,
+      p.lastSavedAt||'', p.submittedAt||'']);
+    Object.entries(p.lines).forEach(([id,qty])=>{
+      qty = Number(qty)||0; if(qty<=0) return;
+      const a = ACT_BY_ID[id]; if(!a) return;
+      const cost=a.rate*qty, labor=cost*a.pctLabor/100, material=cost*a.pctMaterial/100;
+      detailRows.push([p.gpCode,p.gpName,p.district,p.block,p.fyLabel,a.id,a.focusGroup,a.focusGroupHi,a.workType,a.workTypeHi,a.activity,a.activityHi,
+        a.rate,a.pctLabor,a.pctMaterial,qty,round2(cost),round2(labor),round2(material)]);
+    });
+  });
+  const ws1 = XLSX.utils.aoa_to_sheet(summaryRows);
+  const ws2 = XLSX.utils.aoa_to_sheet(detailRows);
+  const actHeader=['Activity ID','Focus Group','Focus Group (Hindi)','Section (Work Type)','Section (Hindi)','Activity Description','Activity Description (Hindi)','Unit Rate (Rs Lakhs)','Labor %','Material %'];
+  const actRows=[actHeader].concat(ACTIVITIES.map(a=>[a.id,a.focusGroup,a.focusGroupHi,a.workType,a.workTypeHi,a.activity,a.activityHi,a.rate,a.pctLabor,a.pctMaterial]));
+  const ws3 = XLSX.utils.aoa_to_sheet(actRows);
+  const gpHeader=['District','Block','GP Code','GP Name'];
+  const gpRows=[gpHeader].concat(GPS.map(g=>[g.district,g.block,g.gpCode,g.gpName]));
+  const ws4 = XLSX.utils.aoa_to_sheet(gpRows);
+  XLSX.utils.book_append_sheet(wb, ws1, 'GP_Plan_Summary');
+  XLSX.utils.book_append_sheet(wb, ws2, 'Activity_Detail');
+  XLSX.utils.book_append_sheet(wb, ws3, 'Activity_Master');
+  XLSX.utils.book_append_sheet(wb, ws4, 'GP_Master');
+  return wb;
+}
+function round2(n){ return Math.round((Number(n)||0)*100)/100; }
+
+function exportExcel(silent){
+  const wb = buildWorkbook();
+  const fname = 'GP_Planning_Database_' + PLAN_FY + '.xlsx';
+  // iOS home-screen apps cannot save blob downloads; use the share sheet there instead
+  if(window.navigator.standalone === true && navigator.canShare){
+    try{
+      const buf = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+      const file = new File([buf], fname, {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      if(navigator.canShare({files:[file]})){
+        navigator.share({files:[file], title:fname}).catch(()=>{});
+        if(!silent) toast('ok', t('okExport'));
+        return;
+      }
+    }catch(e){ /* fall through to normal download */ }
+  }
+  XLSX.writeFile(wb, fname);
+  if(!silent) toast('ok', t('okExport'));
+}
+
+function importExcel(file){
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const wb = XLSX.read(e.target.result, {type:'array'});
+      const ws1 = wb.Sheets['GP_Plan_Summary'];
+      const ws2 = wb.Sheets['Activity_Detail'];
+      if(!ws1 || !ws2){ toast('error', t('errImportFile')); return; }
+      const summary = XLSX.utils.sheet_to_json(ws1);
+      const detail = XLSX.utils.sheet_to_json(ws2);
+      const merged = {};
+      summary.forEach(s=>{
+        const key = planKey(s['GP Code'], s['Fiscal Year']);
+        merged[key] = { gpCode:s['GP Code'], gpName:s['GP Name'], district:s['District'], block:s['Block'],
+          fyLabel:s['Fiscal Year'], budget:Number(s['Proposed Budget (Rs Lakhs)']), status:s['Status']||'draft',
+          lastSavedAt:s['Last Saved']||null, submittedAt:s['Submitted On']||null, lines:{} };
+      });
+      detail.forEach(d=>{
+        const key = planKey(d['GP Code'], d['Fiscal Year']);
+        if(merged[key]) merged[key].lines[d['Activity ID']] = Number(d['Quantity Planned'])||0;
+      });
+      Object.assign(DB.plans, merged);
+      persist();
+      toast('ok', t('okImport')(summary.length));
+      renderDatabaseView(); renderDashboard();
+    }catch(err){
+      toast('error', t('errReadFile'));
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* ================= DASHBOARD ================= */
+let chartLM=null, chartDistrict=null, chartSection=null;
+function renderDashboard(){
+  const plans = Object.values(DB.plans);
+  if(document.getElementById('dash-district').options.length===0){
+    document.getElementById('dash-district').innerHTML = '<option value="">'+t('optAllDistricts')+'</option>' + DISTRICTS.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+  }
+  if(!document.getElementById('dash-district').dataset.bound){
+    document.getElementById('dash-district').addEventListener('change', renderDashboard);
+    document.getElementById('dash-status').addEventListener('change', renderDashboard);
+    document.getElementById('dash-district').dataset.bound = '1';
+  }
+  const distFilter = document.getElementById('dash-district').value;
+  const statusFilter = document.getElementById('dash-status').value;
+
+  let filtered = plans.filter(p=> (!distFilter || p.district===distFilter) && (statusFilter==='all' || p.status===statusFilter));
+
+  const empty = document.getElementById('dash-empty');
+  const content = document.getElementById('dash-content');
+  if(filtered.length===0){ empty.style.display='block'; content.style.display='none'; return; }
+  empty.style.display='none'; content.style.display='block';
+
+  let totalBudget=0, totalCost=0, totalLabor=0, totalMaterial=0;
+  const byDistrict={}, bySection={};
+  filtered.forEach(p=>{
+    const tt = computeTotals(p);
+    totalBudget += (p.budget||0); totalCost += tt.totalCost; totalLabor += tt.laborCost; totalMaterial += tt.materialCost;
+    byDistrict[p.district] = (byDistrict[p.district]||0) + tt.totalCost;
+    Object.entries(tt.bySection).forEach(([k,v])=>{ bySection[k] = (bySection[k]||0) + v.cost; });
+  });
+
+  document.getElementById('kpi-gps').textContent = filtered.length;
+  document.getElementById('kpi-budget').textContent = '₹'+fmt(totalBudget)+' L';
+  document.getElementById('kpi-cost').textContent = '₹'+fmt(totalCost)+' L';
+  const ratio = totalCost>0 ? (totalLabor/totalCost*100) : 0;
+  document.getElementById('kpi-ratio').textContent = totalCost>0 ? ratio.toFixed(1)+':'+(100-ratio).toFixed(1) : '—';
+
+  if(window.Chart){
+    const ctx1 = document.getElementById('chart-lm').getContext('2d');
+    if(chartLM) chartLM.destroy();
+    chartLM = new Chart(ctx1, {type:'doughnut', data:{labels:[t('lblLaborShort'),t('lblMaterialShort')], datasets:[{data:[totalLabor,totalMaterial], backgroundColor:['#6E2A1D','#E8792E']}]},
+      options:{plugins:{legend:{position:'bottom'}}}});
+
+    const distLabels = Object.keys(byDistrict);
+    const ctx2 = document.getElementById('chart-district').getContext('2d');
+    if(chartDistrict) chartDistrict.destroy();
+    chartDistrict = new Chart(ctx2, {type:'bar', data:{labels:distLabels, datasets:[{label:t('kpiCost'), data:distLabels.map(d=>Math.round(byDistrict[d]*100)/100), backgroundColor:'#6E2A1D'}]},
+      options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}});
+
+    const secEntries = Object.entries(bySection).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    const ctx3 = document.getElementById('chart-section').getContext('2d');
+    if(chartSection) chartSection.destroy();
+    chartSection = new Chart(ctx3, {type:'bar', data:{labels:secEntries.map(e=>e[0]), datasets:[{label:t('kpiCost'), data:secEntries.map(e=>Math.round(e[1]*100)/100), backgroundColor:'#E8792E'}]},
+      options:{indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true}}}});
+  }
+
+  const tbody = document.getElementById('dash-table-body');
+  tbody.innerHTML = filtered.map(p=>{
+    const tt = computeTotals(p);
+    const util = p.budget? (tt.totalCost/p.budget*100).toFixed(1) : '0.0';
+    const ls = tt.totalCost>0 ? (tt.laborCost/tt.totalCost*100).toFixed(1) : '—';
+    const badgeText = p.status==='submitted' ? t('statusSubmittedBadge') : t('statusDraftBadge');
+    return `<tr><td>${escapeHtml(p.gpName)}</td><td>${escapeHtml(p.district)}</td><td>${escapeHtml(p.block)}</td>
+      <td class="right num">${fmt(p.budget)}</td><td class="right num">${fmt(tt.totalCost)}</td><td class="right num">${util}%</td>
+      <td class="right num">${ls}</td><td><span class="badge-status badge-${p.status}">${badgeText}</span></td></tr>`;
+  }).join('');
+}
+
+/* ================= DATABASE VIEW ================= */
+function renderDatabaseView(){
+  const plans = Object.values(DB.plans);
+  document.getElementById('db-count').textContent = t('dbCount')(plans.length);
+  const rows = [];
+  plans.forEach(p=>{
+    Object.entries(p.lines).forEach(([id,qty])=>{
+      qty = Number(qty)||0; if(qty<=0) return;
+      const a = ACT_BY_ID[id]; if(!a) return;
+      const cost = a.rate*qty;
+      rows.push({p,a,qty,cost});
+    });
+  });
+  const tbody = document.getElementById('db-table-body');
+  if(rows.length===0){
+    document.getElementById('db-empty').style.display='block';
+    document.getElementById('db-table-wrap').style.display='none';
+    return;
+  }
+  document.getElementById('db-empty').style.display='none';
+  document.getElementById('db-table-wrap').style.display='block';
+  tbody.innerHTML = rows.map(r=>{
+    const badgeText = r.p.status==='submitted' ? t('statusSubmittedBadge') : t('statusDraftBadge');
+    return `<tr>
+    <td>${escapeHtml(r.p.gpName)}</td><td>${escapeHtml(r.p.district)}</td><td>${escapeHtml(r.p.block)}</td>
+    <td>${escapeHtml(labelFocus(r.a.focusGroup))}</td><td>${escapeHtml(labelWorkType(r.a.workType))}</td><td>${escapeHtml(labelActivity(r.a))}</td>
+    <td class="right num">${r.qty}</td><td class="right num">${fmt(r.cost)}</td>
+    <td><span class="badge-status badge-${r.p.status}">${badgeText}</span></td></tr>`;
+  }).join('');
+}
+
+function initDatabaseView(){
+  document.getElementById('btn-export-excel').addEventListener('click', ()=>exportExcel(false));
+  document.getElementById('file-import').addEventListener('change', (e)=>{
+    const f = e.target.files[0];
+    if(f) importExcel(f);
+    e.target.value='';
+  });
+  document.getElementById('btn-clear-db').addEventListener('click', ()=>{
+    if(confirm(t('confirmClearDB'))){
+      DB = {plans:{}}; persist(); renderDatabaseView(); renderDashboard();
+      toast('ok', t('okClearDB'));
+    }
+  });
+}
+
+/* ---------- Utils ---------- */
+function escapeHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------- Init ---------- */
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.getElementById('fy-label').textContent = PLAN_FY;
+  document.getElementById('budget-fy').textContent = PLAN_FY;
+  document.querySelectorAll('nav.tabs button').forEach(b=>{
+    b.addEventListener('click', ()=>showView(b.dataset.view));
+  });
+  initEntryView();
+  initDatabaseView();
+  applyLanguage(LANG);
+  showView('entry');
+});
+
+
+/* ================= PWA: install prompt, offline notices, service worker ================= */
+let deferredInstall = null;
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault(); deferredInstall = e;
+  const b = document.getElementById('btn-install'); if(b) b.style.display = 'inline-flex';
+});
+window.addEventListener('appinstalled', ()=>{
+  deferredInstall = null;
+  const b = document.getElementById('btn-install'); if(b) b.style.display = 'none';
+  toast('ok', t('msgInstalled'));
+});
+document.addEventListener('DOMContentLoaded', ()=>{
+  const b = document.getElementById('btn-install');
+  if(b) b.addEventListener('click', async ()=>{
+    if(!deferredInstall) return;
+    deferredInstall.prompt();
+    try{ await deferredInstall.userChoice; }catch(e){}
+    deferredInstall = null; b.style.display = 'none';
+  });
+});
+window.addEventListener('offline', ()=>toast('', t('msgOffline')));
+window.addEventListener('online', ()=>toast('ok', t('msgOnline')));
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+</script>
+</body>
+</html>
